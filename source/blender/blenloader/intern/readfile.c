@@ -9461,7 +9461,7 @@ static BHead *read_libblock(FileData *fd,
           id->tag = tag | LIB_TAG_NEED_LINK | LIB_TAG_NEW;
           id->lib = main->curlib;
           id->us = ID_FAKE_USERS(id);
-          id->icon_id = 0;
+          /* Do not reset id->icon_id here, memory allocated for it remains valid. */
           id->newid = NULL; /* Needed because .blend may have been saved with crap value here... */
           id->orig_id = NULL;
 
