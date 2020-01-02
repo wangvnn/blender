@@ -9454,9 +9454,10 @@ static BHead *read_libblock(FileData *fd,
         Main *old_bmain = fd->old_mainlist->first;
         ListBase *old_lb = which_libbase(old_bmain, idcode);
         BLI_assert(old_lb != NULL);
-        if (BLI_findindex(old_lb, id_bhead->old) != -1) {
+        ID *id_old = NULL;
+        if ((id_old = BLI_findstring(old_lb, id->name, offsetof(ID, name))) != NULL) {
           MEM_freeN(id);
-          id = (ID *)id_bhead->old;
+          id = id_old;
 
           /* Do not add LIB_TAG_NEW here, this should not be needed/used in undo case anyway (as
            * this is only for do_version-like code), but for sake of consistency, and also because
@@ -9469,6 +9470,7 @@ static BHead *read_libblock(FileData *fd,
           id->orig_id = NULL;
 
           oldnewmap_insert(fd->libmap, id_bhead->old, id, id_bhead->code);
+          oldnewmap_insert(fd->libmap, id, id, id_bhead->code);
 
           ListBase *new_lb = which_libbase(main, idcode);
           BLI_remlink(old_lb, id);
@@ -9491,6 +9493,15 @@ static BHead *read_libblock(FileData *fd,
     if (lb) {
       /* for ID_LINK_PLACEHOLDER check */
       oldnewmap_insert(fd->libmap, id_bhead->old, id, id_bhead->code);
+
+      if (fd->old_mainlist != NULL) {
+        Main *old_bmain = fd->old_mainlist->first;
+        ListBase *old_lb = which_libbase(old_bmain, idcode);
+        ID *id_old;
+        if ((id_old = BLI_findstring(old_lb, id->name, offsetof(ID, name))) != NULL) {
+          oldnewmap_insert(fd->libmap, id_old, id, id_bhead->code);
+        }
+      }
 
       BLI_addtail(lb, id);
     }
