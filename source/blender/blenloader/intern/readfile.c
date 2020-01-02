@@ -9458,7 +9458,10 @@ static BHead *read_libblock(FileData *fd,
           MEM_freeN(id);
           id = (ID *)id_bhead->old;
 
-          id->tag = tag | LIB_TAG_NEED_LINK | LIB_TAG_NEW;
+          /* Do not add LIB_TAG_NEW here, this should not be needed/used in undo case anyway (as
+           * this is only for do_version-like code), but for sake of consistency, and also because
+           * it will tell us which ID is re-used from old Main, and which one is actually new. */
+          id->tag = tag | LIB_TAG_NEED_LINK;
           id->lib = main->curlib;
           id->us = ID_FAKE_USERS(id);
           /* Do not reset id->icon_id here, memory allocated for it remains valid. */
