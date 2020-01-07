@@ -10093,19 +10093,25 @@ static void blo_undo_merge_and_fix_collisions_in_libmaps(FileData *fd)
            oldp = (const char *)oldp + 1)
         ;
 
-      DEBUG_PRINTF(
+      printf(
           "%s: found same old pointer value used by both re-used IDs and newly read-from-memfile "
           "IDs, remapped the laters from %p to %p\n",
           __func__,
           orig_oldp,
           oldp);
+      printf("%s: Nothing to worry about, unless this leads to a crash!\n", __func__);
 
       /* Now we need to remap all orig_oldp pointers in local main to the new oldp value. */
+      /* Note that we are not using regular ID remapping API, since we only care about pointer
+       * values here, current bmain is still totally unlinked so all the extra processing would be
+       * useless - and lead to crash. */
       Main *bmain = fd->mainlist->first;
       ID *id;
       const void *old_new_oldpointers[2] = {orig_oldp, oldp};
       FOREACH_MAIN_ID_BEGIN (bmain, id) {
         if (id->tag & LIB_TAG_UNDO_OLD_ID_REUSED) {
+          /* We only want to update values of odl pointers in data read from memfile, not the one
+           * re-used from the old bmain. */
           continue;
         }
         BKE_library_foreach_ID_link(bmain,
