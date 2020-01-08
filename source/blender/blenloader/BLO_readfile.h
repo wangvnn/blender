@@ -74,7 +74,7 @@ typedef struct WorkspaceConfigFileData {
 } WorkspaceConfigFileData;
 
 struct BlendFileReadParams {
-  uint skip_flags : 2; /* eBLOReadSkip */
+  uint skip_flags : 3; /* eBLOReadSkip */
   uint is_startup : 1;
 };
 
@@ -83,6 +83,8 @@ typedef enum eBLOReadSkip {
   BLO_READ_SKIP_NONE = 0,
   BLO_READ_SKIP_USERDEF = (1 << 0),
   BLO_READ_SKIP_DATA = (1 << 1),
+  /** Do not attempt to re-use IDs from old bmain for unchanged ones in case of undo. */
+  BLO_READ_SKIP_UNDO_OLD_MAIN = (1 << 2),
 } eBLOReadSkip;
 #define BLO_READ_SKIP_ALL (BLO_READ_SKIP_USERDEF | BLO_READ_SKIP_DATA)
 

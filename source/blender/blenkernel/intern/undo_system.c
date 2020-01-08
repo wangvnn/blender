@@ -170,6 +170,12 @@ static bool undosys_step_encode(bContext *C, Main *bmain, UndoStack *ustack, Und
        * not all members are filled in. */
       us->type->step_foreach_ID_ref(us, undosys_id_ref_store, bmain);
     }
+
+    /* Store the fact that we should not re-use old data with that undo step, and reset the Main
+     * flag. */
+    us->use_old_bmain_data = !bmain->use_memfile_full_barrier;
+    bmain->use_memfile_full_barrier = false;
+
 #ifdef WITH_GLOBAL_UNDO_CORRECT_ORDER
     if (us->type == BKE_UNDOSYS_TYPE_MEMFILE) {
       ustack->step_active_memfile = us;
@@ -233,27 +239,32 @@ static void undosys_step_decode(
 
   /* Extract depsgraphs from current bmain (which may be freed during undo step reading),
    * and store them for re-use. */
-  GHash *depsgraphs = BKE_scene_undo_depsgraphs_extract(bmain);
+  GHash *depsgraphs = NULL;
+  if (us->use_old_bmain_data) {
+    depsgraphs = BKE_scene_undo_depsgraphs_extract(bmain);
+  }
 
   UNDO_NESTED_CHECK_BEGIN;
   us->type->step_decode(C, bmain, us, dir, is_final);
   UNDO_NESTED_CHECK_END;
 
-  /* Restore previous depsgraphs into current bmain. */
-  bmain = G_MAIN;
-  BKE_scene_undo_depsgraphs_restore(bmain, depsgraphs);
+  if (us->use_old_bmain_data) {
+    /* Restore previous depsgraphs into current bmain. */
+    bmain = G_MAIN;
+    BKE_scene_undo_depsgraphs_restore(bmain, depsgraphs);
 
-  /* We need to inform depsgraph about re-used old IDs that would be using newly read data-blocks,
-   * at least COW evaluated copies need to be updated... */
-  ID *id = NULL;
-  FOREACH_MAIN_ID_BEGIN (bmain, id) {
-    if (id->tag & LIB_TAG_UNDO_OLD_ID_REUSED) {
-      BKE_library_foreach_ID_link(bmain, id, undosys_step_id_reused_cb, bmain, IDWALK_READONLY);
+    /* We need to inform depsgraph about re-used old IDs that would be using newly read
+     * data-blocks, at least COW evaluated copies need to be updated... */
+    ID *id = NULL;
+    FOREACH_MAIN_ID_BEGIN (bmain, id) {
+      if (id->tag & LIB_TAG_UNDO_OLD_ID_REUSED) {
+        BKE_library_foreach_ID_link(bmain, id, undosys_step_id_reused_cb, bmain, IDWALK_READONLY);
+      }
     }
-  }
-  FOREACH_MAIN_ID_END;
+    FOREACH_MAIN_ID_END;
 
-  BKE_main_id_tag_all(bmain, LIB_TAG_UNDO_OLD_ID_REUSED, false);
+    BKE_main_id_tag_all(bmain, LIB_TAG_UNDO_OLD_ID_REUSED, false);
+  }
 
 #ifdef WITH_GLOBAL_UNDO_CORRECT_ORDER
   if (us->type == BKE_UNDOSYS_TYPE_MEMFILE) {

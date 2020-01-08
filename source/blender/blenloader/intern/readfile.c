@@ -9469,7 +9469,8 @@ static BHead *read_libblock(FileData *fd,
                    id->name,
                    fd->are_memchunks_identical);
 
-      if (fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
+      if (fd->memfile != NULL && (fd->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0 &&
+          fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
         BLI_assert(fd->memfile != NULL);
         BLI_assert(fd->old_idmap != NULL);
         /* This code should only ever be reached for local data-blocks. */
@@ -9522,7 +9523,9 @@ static BHead *read_libblock(FileData *fd,
 
       /* Some re-used old IDs might also use newly read ones, so we have to check for old memory
        * addresses for those as well. */
-      if (fd->old_idmap != NULL && id->lib == NULL) {
+      if (fd->memfile != NULL && (fd->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0 &&
+          id->lib == NULL) {
+        BLI_assert(fd->old_idmap != NULL);
         ID *id_old = BKE_main_idmap_lookup(fd->old_idmap, idcode, id->name + 2, NULL);
         if (id_old != NULL) {
           oldnewmap_insert(fd->libmap_undo_reused, id_old, id, id_bhead->code);
@@ -10245,7 +10248,7 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
 
     blo_join_main(&mainlist);
 
-    if (fd->memfile != NULL) {
+    if (fd->memfile != NULL && (fd->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0) {
       /* In case of undo, we have to handle possible 'pointer collisions' between newly read
        * data-blocks and those re-used from the old bmain. */
       BLI_assert(fd->libmap_undo_reused != NULL);

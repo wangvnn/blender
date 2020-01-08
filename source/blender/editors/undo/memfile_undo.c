@@ -94,7 +94,7 @@ static void memfile_undosys_step_decode(
   ED_editors_exit(bmain, false);
 
   MemFileUndoStep *us = (MemFileUndoStep *)us_p;
-  BKE_memfile_undo_decode(us->data, C);
+  BKE_memfile_undo_decode(us->data, us->step.use_old_bmain_data, C);
 
   for (UndoStep *us_iter = us_p->next; us_iter; us_iter = us_iter->next) {
     if (BKE_UNDOSYS_TYPE_IS_MEMFILE_SKIP(us_iter->type)) {
