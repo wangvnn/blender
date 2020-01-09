@@ -229,7 +229,7 @@
 #define USE_GHASH_RESTORE_POINTER
 
 /* Define this to have verbose debug prints. */
-#define USE_DEBUG_PRINT
+//#define USE_DEBUG_PRINT
 
 #ifdef USE_DEBUG_PRINT
 #  define DEBUG_PRINTF(...) printf(__VA_ARGS__)
@@ -1261,9 +1261,6 @@ static int fd_read_from_memfile(FileData *filedata,
       seek += readsize;
       if (r_is_memchunck_identical != NULL) {
         *r_is_memchunck_identical = chunk->is_identical;
-      }
-      if (chunk->is_identical) {
-        //        DEBUG_PRINTF("%s: found an identical memfile chunk...\n", __func__);
       }
     } while (totread < size);
 
@@ -9421,11 +9418,7 @@ static BHead *read_libblock(FileData *fd,
 
   /* read libblock */
   fd->are_memchunks_identical = true;
-  DEBUG_PRINTF("%s: Reading a struct...\n", __func__);
   id = read_struct(fd, bhead, "lib block");
-  DEBUG_PRINTF("\tfor ID %s: are_memchunks_identical: %d\n",
-               id ? id->name : "NONE",
-               fd->are_memchunks_identical);
 
   BHead *id_bhead = bhead;
 
@@ -9441,10 +9434,6 @@ static BHead *read_libblock(FileData *fd,
        * save some more ticks. Probably not worth it though, bottleneck is full depsgraph rebuild
        * and eval, not actual file reading. */
       bhead = read_data_into_oldnewmap(fd, id_bhead, allocname);
-
-      DEBUG_PRINTF("\tfor data of ID %s: are_memchunks_identical: %d\n",
-                   id->name,
-                   fd->are_memchunks_identical);
 
       if (fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
         BLI_assert(fd->memfile);
