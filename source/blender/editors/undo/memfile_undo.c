@@ -120,20 +120,55 @@ static int memfile_undosys_step_id_reused_cb(void *user_data,
 }
 
 static void memfile_undosys_step_decode(
-    struct bContext *C, struct Main *bmain, UndoStep *us_p, int UNUSED(dir), bool UNUSED(is_final))
+    struct bContext *C, struct Main *bmain, UndoStep *us_p, int dir, bool UNUSED(is_final))
 {
   MemFileUndoStep *us = (MemFileUndoStep *)us_p;
+
+  bool use_old_bmain_data = true;
+
+  if (dir > 0) {
+    /* Redo case.
+     * The only time we should have to force a complete redo is when current step is tagged as a
+     * redo barrier.
+     * If previous step was not a memfile one should not matter here, current data in old bmain
+     * should still always be valid for unchanged dtat-blocks. */
+    if (us->step.use_old_bmain_data == false) {
+      use_old_bmain_data = false;
+    }
+  }
+  else {
+    /* Undo case.
+     * Here we do not care whether current step is an undo barrier, since we are comming from 'the
+     * future' we can still re-use old data. However, if *next* undo step (i.e. the one immédiately
+     * in the future, the one we are comming from) is a barrier, then we have to force a complete
+     * undo.
+     * Likewise, if next step (the one we are comming from) was a non-memfile one, there is no
+     * guarantee that current bmain data actually reflects the status of unchanged datablocks in
+     * memfile, since changes might have been flushed to current bmain data without triggering any
+     * memfile step storage (typical common case e.g. when using edit modes).
+     */
+    BLI_assert(dir < 0);
+    UndoStep *us_next = us_p->next;
+    if (us_next != NULL) {
+      if (us_next->use_old_bmain_data == false) {
+        use_old_bmain_data = false;
+      }
+      if (us_next->type != BKE_UNDOSYS_TYPE_MEMFILE) {
+        use_old_bmain_data = false;
+      }
+    }
+  }
 
   /* Extract depsgraphs from current bmain (which may be freed during undo step reading),
    * and store them for re-use. */
   GHash *depsgraphs = NULL;
-  if (us->step.use_old_bmain_data) {
+  if (use_old_bmain_data) {
     depsgraphs = BKE_scene_undo_depsgraphs_extract(bmain);
   }
 
   ED_editors_exit(bmain, false);
 
-  BKE_memfile_undo_decode(us->data, us->step.use_old_bmain_data, C);
+  BKE_memfile_undo_decode(us->data, use_old_bmain_data, C);
 
   for (UndoStep *us_iter = us_p->next; us_iter; us_iter = us_iter->next) {
     if (BKE_UNDOSYS_TYPE_IS_MEMFILE_SKIP(us_iter->type)) {
@@ -152,7 +187,7 @@ static void memfile_undosys_step_decode(
   bmain = CTX_data_main(C);
   ED_editors_init_for_undo(bmain);
 
-  if (us->step.use_old_bmain_data) {
+  if (use_old_bmain_data) {
     /* Restore previous depsgraphs into current bmain. */
     BKE_scene_undo_depsgraphs_restore(bmain, depsgraphs);
 
