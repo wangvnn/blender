@@ -115,6 +115,12 @@ def _template_items_animation():
     ]
 
 
+def _template_items_gizmo_tweak_value_drag():
+    return [
+        ("gizmogroup.gizmo_tweak", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, None),
+    ]
+
+
 # Tool System Templates
 
 def _template_items_basic_tools(*, connected=False):
@@ -3554,6 +3560,113 @@ def km_transform_modal_map(_params):
 
 
 # ------------------------------------------------------------------------------
+# Tool System Keymaps
+#
+# Named are auto-generated based on the tool name and it's toolbar.
+
+
+def km_image_editor_tool_uv_move(params):
+    return (
+        "Image Editor Tool: Uv, Move",
+        {"space_type": 'IMAGE_EDITOR', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.translate", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_image_editor_tool_uv_rotate(params):
+    return (
+        "Image Editor Tool: Uv, Rotate",
+        {"space_type": 'IMAGE_EDITOR', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.rotate", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_image_editor_tool_uv_scale(params):
+    return (
+        "Image Editor Tool: Uv, Scale",
+        {"space_type": 'IMAGE_EDITOR', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.resize", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_3d_view_tool_move(params):
+    return (
+        "3D View Tool: Move",
+        {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.translate", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_3d_view_tool_rotate(params):
+    return (
+        "3D View Tool: Rotate",
+        {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.rotate", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_3d_view_tool_scale(params):
+    return (
+        "3D View Tool: Scale",
+        {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.resize", {"type": 'EVT_TWEAK_M', "value": 'ANY'},
+             {"properties": [("release_confirm", True)]}),
+        ]},
+    )
+
+
+def km_3d_view_tool_transform(params):
+    return (
+        "3D View Tool: Transform",
+        {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
+        {"items": [
+            ("transform.from_gizmo", {"type": 'EVT_TWEAK_M', "value": 'ANY'}, None),
+        ]},
+    )
+
+
+# Fallback for gizmos that don't have custom a custom key-map.
+
+
+def km_generic_gizmo_drag(_params):
+    keymap = (
+        "Generic Gizmo Drag",
+        {"space_type": 'EMPTY', "region_type": 'WINDOW'},
+        {"items": _template_items_gizmo_tweak_value_drag()},
+    )
+
+    return keymap
+
+
+def km_generic_gizmo_maybe_drag(params):
+    keymap = (
+        "Generic Gizmo Maybe Drag",
+        {"space_type": 'EMPTY', "region_type": 'WINDOW'},
+        {"items":
+         _template_items_gizmo_tweak_value_drag()
+        },
+    )
+
+    return keymap
+
+
+# ------------------------------------------------------------------------------
 # Full Configuration
 
 def generate_keymaps(params=None):
@@ -3640,5 +3753,18 @@ def generate_keymaps(params=None):
         km_eyedropper_modal_map(params),
         km_eyedropper_colorramp_pointsampling_map(params),
         km_transform_modal_map(params),
+
+        # Gizmos.
+        km_generic_gizmo_drag(params),
+        km_generic_gizmo_maybe_drag(params),
+
+        # Tool System.
+        km_image_editor_tool_uv_move(params),
+        km_image_editor_tool_uv_rotate(params),
+        km_image_editor_tool_uv_scale(params),
+        km_3d_view_tool_transform(params),
+        km_3d_view_tool_move(params),
+        km_3d_view_tool_rotate(params),
+        km_3d_view_tool_scale(params),
 
     ]
