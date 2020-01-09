@@ -106,7 +106,6 @@ void memfile_chunk_add(MemFile *memfile, const char *buf, uint size, MemFileChun
     if (compchunk->size == curchunk->size) {
       if (memcmp(compchunk->buf, buf, size) == 0) {
         curchunk->buf = compchunk->buf;
-        printf("\t%s: That mem chunk is unchanged\n", __func__);
         curchunk->is_identical = true;
       }
     }
