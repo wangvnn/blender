@@ -86,6 +86,9 @@ typedef struct FileData {
    * Updated by `fd_read_from_memfile()`, user is responsible to reset it to true when needed.
    * Used to detect unchanged IDs. */
   bool are_memchunks_identical;
+  /** Whether we are undoing (< 0) or redoing (> 0), used to choose which 'unchanged' flag to use
+   * to detect unchanged data from memfile. */
+  short undo_direction;
 
   /** Variables needed for reading from file. */
   gzFile gzfiledes;
@@ -143,7 +146,9 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath);
 
 FileData *blo_filedata_from_file(const char *filepath, struct ReportList *reports);
 FileData *blo_filedata_from_memory(const void *buffer, int buffersize, struct ReportList *reports);
-FileData *blo_filedata_from_memfile(struct MemFile *memfile, struct ReportList *reports);
+FileData *blo_filedata_from_memfile(struct MemFile *memfile,
+                                    const struct BlendFileReadParams *params,
+                                    struct ReportList *reports);
 
 void blo_clear_proxy_pointers_from_lib(struct Main *oldmain);
 void blo_make_image_pointer_map(FileData *fd, struct Main *oldmain);

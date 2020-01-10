@@ -88,13 +88,16 @@ static bool memfile_undosys_step_encode(struct bContext *UNUSED(C),
   return true;
 }
 
-static void memfile_undosys_step_decode(
-    struct bContext *C, struct Main *bmain, UndoStep *us_p, int UNUSED(dir), bool UNUSED(is_final))
+static void memfile_undosys_step_decode(struct bContext *C,
+                                        struct Main *bmain,
+                                        UndoStep *us_p,
+                                        int undo_direction,
+                                        bool UNUSED(is_final))
 {
   ED_editors_exit(bmain, false);
 
   MemFileUndoStep *us = (MemFileUndoStep *)us_p;
-  BKE_memfile_undo_decode(us->data, C);
+  BKE_memfile_undo_decode(us->data, undo_direction, C);
 
   for (UndoStep *us_iter = us_p->next; us_iter; us_iter = us_iter->next) {
     if (BKE_UNDOSYS_TYPE_IS_MEMFILE_SKIP(us_iter->type)) {

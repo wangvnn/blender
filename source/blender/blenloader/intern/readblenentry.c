@@ -363,17 +363,17 @@ BlendFileData *BLO_read_from_memory(const void *mem,
 BlendFileData *BLO_read_from_memfile(Main *oldmain,
                                      const char *filename,
                                      MemFile *memfile,
-                                     eBLOReadSkip skip_flags,
+                                     const struct BlendFileReadParams *params,
                                      ReportList *reports)
 {
   BlendFileData *bfd = NULL;
   FileData *fd;
   ListBase old_mainlist;
 
-  fd = blo_filedata_from_memfile(memfile, reports);
+  fd = blo_filedata_from_memfile(memfile, params, reports);
   if (fd) {
     fd->reports = reports;
-    fd->skip_flags = skip_flags;
+    fd->skip_flags = params->skip_flags;
     BLI_strncpy(fd->relabase, filename, sizeof(fd->relabase));
 
     /* clear ob->proxy_from pointers in old main */

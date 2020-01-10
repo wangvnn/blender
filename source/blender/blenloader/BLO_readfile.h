@@ -76,6 +76,9 @@ typedef struct WorkspaceConfigFileData {
 struct BlendFileReadParams {
   uint skip_flags : 2; /* eBLOReadSkip */
   uint is_startup : 1;
+
+  /** Whether we are reading the memfile for an undo (< 0) or a redo (> 0). */
+  int undo_direction : 2;
 };
 
 /* skip reading some data-block types (may want to skip screen data too). */
@@ -96,7 +99,7 @@ BlendFileData *BLO_read_from_memory(const void *mem,
 BlendFileData *BLO_read_from_memfile(struct Main *oldmain,
                                      const char *filename,
                                      struct MemFile *memfile,
-                                     eBLOReadSkip skip_flags,
+                                     const struct BlendFileReadParams *params,
                                      struct ReportList *reports);
 
 void BLO_blendfiledata_free(BlendFileData *bfd);

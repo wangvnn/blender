@@ -1260,7 +1260,13 @@ static int fd_read_from_memfile(FileData *filedata,
       filedata->file_offset += readsize;
       seek += readsize;
       if (r_is_memchunck_identical != NULL) {
-        *r_is_memchunck_identical = chunk->is_identical;
+        /* `is_identical` of current chunk represent whether it changed compared to previous undo
+         * step. this is fine in redo case (filedata->undo_direction > 0), but not in undo case,
+         * where we need an extra flag defined when saving the next (future) step after the one we
+         * want to restore, as we are supposed to 'come from' that future undo step, and not the
+         * one before current one. */
+        *r_is_memchunck_identical = filedata->undo_direction > 0 ? chunk->is_identical :
+                                                                   chunk->is_identical_future;
       }
     } while (totread < size);
 
@@ -1502,7 +1508,9 @@ FileData *blo_filedata_from_memory(const void *mem, int memsize, ReportList *rep
   }
 }
 
-FileData *blo_filedata_from_memfile(MemFile *memfile, ReportList *reports)
+FileData *blo_filedata_from_memfile(MemFile *memfile,
+                                    const struct BlendFileReadParams *params,
+                                    ReportList *reports)
 {
   if (!memfile) {
     BKE_report(reports, RPT_WARNING, "Unable to open blend <memory>");
@@ -1511,6 +1519,7 @@ FileData *blo_filedata_from_memfile(MemFile *memfile, ReportList *reports)
   else {
     FileData *fd = filedata_new();
     fd->memfile = memfile;
+    fd->undo_direction = params->undo_direction;
 
     fd->read = fd_read_from_memfile;
     fd->flags |= FD_FLAGS_NOT_MY_BUFFER;
@@ -9434,6 +9443,9 @@ static BHead *read_libblock(FileData *fd,
        * save some more ticks. Probably not worth it though, bottleneck is full depsgraph rebuild
        * and eval, not actual file reading. */
       bhead = read_data_into_oldnewmap(fd, id_bhead, allocname);
+
+      DEBUG_PRINTF(
+          "%s: ID %s is unchanged: %d\n", __func__, id->name, fd->are_memchunks_identical);
 
       if (fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
         BLI_assert(fd->memfile);
