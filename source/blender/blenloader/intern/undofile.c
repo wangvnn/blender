@@ -128,8 +128,11 @@ struct Main *BLO_memfile_main_get(struct MemFile *memfile,
                                   struct Scene **r_scene)
 {
   struct Main *bmain_undo = NULL;
-  BlendFileData *bfd = BLO_read_from_memfile(
-      oldmain, BKE_main_blendfile_path(oldmain), memfile, BLO_READ_SKIP_NONE, NULL);
+  BlendFileData *bfd = BLO_read_from_memfile(oldmain,
+                                             BKE_main_blendfile_path(oldmain),
+                                             memfile,
+                                             &(const struct BlendFileReadParams){0},
+                                             NULL);
 
   if (bfd) {
     bmain_undo = bfd->main;
