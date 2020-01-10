@@ -9467,15 +9467,20 @@ static BHead *read_libblock(FileData *fd,
        * and eval, not actual file reading. */
       bhead = read_data_into_oldnewmap(fd, id_bhead, allocname);
 
-      DEBUG_PRINTF(
-          "%s: ID %s is unchanged: %d\n", __func__, id->name, fd->are_memchunks_identical);
-
+<<<<<<< HEAD
       if (fd->memfile != NULL && (fd->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0 &&
           fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
         BLI_assert(fd->memfile != NULL);
         BLI_assert(fd->old_idmap != NULL);
         /* This code should only ever be reached for local data-blocks. */
         BLI_assert(main->curlib == NULL);
+=======
+      DEBUG_PRINTF(
+          "%s: ID %s is unchanged: %d\n", __func__, id->name, fd->are_memchunks_identical);
+
+      if (fd->are_memchunks_identical && !ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
+        BLI_assert(fd->memfile);
+>>>>>>> undo-experiments
 
         /* Find the 'current' existing ID we want to reuse instead of the one we would read from
          * the undo memfile. */

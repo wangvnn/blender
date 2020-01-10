@@ -61,7 +61,11 @@
 
 #define UNDO_DISK 0
 
-bool BKE_memfile_undo_decode(MemFileUndoData *mfu, const int undo_direction, const bool use_old_bmain_data, bContext *C)
+<<<<<<< HEAD
+bool BKE_memfile_undo_decode(MemFileUndoData *mfu, const bool use_old_bmain_data, bContext *C)
+=======
+bool BKE_memfile_undo_decode(MemFileUndoData *mfu, const int undo_direction, bContext *C)
+>>>>>>> undo-experiments
 {
   Main *bmain = CTX_data_main(C);
   char mainstr[sizeof(bmain->name)];
@@ -77,10 +81,13 @@ bool BKE_memfile_undo_decode(MemFileUndoData *mfu, const int undo_direction, con
   }
   else {
     struct BlendFileReadParams params = {0};
-    params.undo_direction = undo_direction > 0 ? 1 : -1;
+<<<<<<< HEAD
     if (!use_old_bmain_data) {
       params.skip_flags |= BLO_READ_SKIP_UNDO_OLD_MAIN;
     }
+=======
+    params.undo_direction = undo_direction > 0 ? 1 : -1;
+>>>>>>> undo-experiments
     success = BKE_blendfile_read_from_memfile(C, &mfu->memfile, &params, NULL);
   }
 

@@ -98,6 +98,7 @@ void memfile_chunk_add(MemFile *memfile, const char *buf, uint size, MemFileChun
   curchunk->size = size;
   curchunk->buf = NULL;
   curchunk->is_identical = false;
+  curchunk->is_identical_future = false;
   BLI_addtail(&memfile->chunks, curchunk);
 
   /* we compare compchunk with buf */
@@ -106,8 +107,8 @@ void memfile_chunk_add(MemFile *memfile, const char *buf, uint size, MemFileChun
     if (compchunk->size == curchunk->size) {
       if (memcmp(compchunk->buf, buf, size) == 0) {
         curchunk->buf = compchunk->buf;
-        printf("\t%s: That mem chunk is unchanged\n", __func__);
         curchunk->is_identical = true;
+        compchunk->is_identical_future = true;
       }
     }
     *compchunk_step = compchunk->next;

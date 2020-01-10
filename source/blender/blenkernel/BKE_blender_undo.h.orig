@@ -33,8 +33,11 @@ struct bContext;
 struct MemFileUndoData *BKE_memfile_undo_encode(struct Main *bmain,
                                                 struct MemFileUndoData *mfu_prev);
 bool BKE_memfile_undo_decode(struct MemFileUndoData *mfu,
-                             const int undo_direction,
+<<<<<<< HEAD
                              const bool use_old_bmain_data,
+=======
+                             const int undo_direction,
+>>>>>>> undo-experiments
                              struct bContext *C);
 void BKE_memfile_undo_free(struct MemFileUndoData *mfu);
 

@@ -363,17 +363,17 @@ BlendFileData *BLO_read_from_memory(const void *mem,
 BlendFileData *BLO_read_from_memfile(Main *oldmain,
                                      const char *filename,
                                      MemFile *memfile,
-                                     eBLOReadSkip skip_flags,
+                                     const struct BlendFileReadParams *params,
                                      ReportList *reports)
 {
   BlendFileData *bfd = NULL;
   FileData *fd;
   ListBase old_mainlist;
 
-  fd = blo_filedata_from_memfile(memfile, reports);
+  fd = blo_filedata_from_memfile(memfile, params, reports);
   if (fd) {
     fd->reports = reports;
-    fd->skip_flags = skip_flags;
+    fd->skip_flags = params->skip_flags;
     BLI_strncpy(fd->relabase, filename, sizeof(fd->relabase));
 
     /* clear ob->proxy_from pointers in old main */
@@ -384,7 +384,7 @@ BlendFileData *BLO_read_from_memfile(Main *oldmain,
     /* add the library pointers in oldmap lookup */
     blo_add_library_pointer_map(&old_mainlist, fd);
 
-    if ((skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0) {
+    if ((params->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0) {
       /* Build idmap of old main (we only care about local data here, so we can do that after
        * split_main() call. */
       blo_make_idmap_from_main(fd, old_mainlist.first);
