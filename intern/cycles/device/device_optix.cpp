@@ -1432,6 +1432,8 @@ class OptiXDevice : public Device {
           size_t motion_transform_size = sizeof(OptixSRTMotionTransform) +
                                          motion_keys * sizeof(OptixSRTData);
 
+          const CUDAContextScope scope(cuda_context);
+
           CUdeviceptr motion_transform_gpu = 0;
           check_result_cuda_ret(cuMemAlloc(&motion_transform_gpu, motion_transform_size));
           as_mem.push_back(motion_transform_gpu);
@@ -1459,6 +1461,9 @@ class OptiXDevice : public Device {
             srt_data[i].a = decomp[i].z.x;  // scale.x.y
             srt_data[i].b = decomp[i].z.y;  // scale.x.z
             srt_data[i].c = decomp[i].w.x;  // scale.y.z
+            assert(decomp[i].z.z == 0.0f);  // scale.y.x
+            assert(decomp[i].w.y == 0.0f);  // scale.z.x
+            assert(decomp[i].w.z == 0.0f);  // scale.z.y
 
             // Pivot point
             srt_data[i].pvx = 0.0f;
