@@ -145,6 +145,8 @@ static void memfile_undosys_step_decode(struct bContext *C,
                                         int undo_direction,
                                         bool UNUSED(is_final))
 {
+  BLI_assert(undo_direction != 0);
+
   bool use_old_bmain_data = true;
 
   if (undo_direction > 0) {
@@ -168,7 +170,6 @@ static void memfile_undosys_step_decode(struct bContext *C,
      * memfile, since changes might have been flushed to current bmain data without triggering any
      * memfile step storage (typical common case e.g. when using edit modes).
      */
-    BLI_assert(undo_direction < 0);
     UndoStep *us_next = us_p->next;
     if (us_next != NULL) {
       if (us_next->use_old_bmain_data == false) {
