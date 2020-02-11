@@ -9155,6 +9155,12 @@ static BHead *read_libblock(FileData *fd,
             *r_id = id_old;
           }
 
+          const bool is_id_memaddress_already_registered = !BKE_main_idmemset_register_id(main,
+                                                                                          id_old);
+          /* Should never fail, since we re-used an existing ID it should have already been
+           * registered. */
+          BLI_assert(!is_id_memaddress_already_registered);
+
           MEM_freeN(id);
           oldnewmap_free_unused(fd->datamap);
           oldnewmap_clear(fd->datamap);
