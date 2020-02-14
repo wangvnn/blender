@@ -9902,7 +9902,13 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
   bfd = MEM_callocN(sizeof(BlendFileData), "blendfiledata");
 
   bfd->main = BKE_main_new();
-  BKE_main_idmemset_ensure(bfd->main);
+  if (fd->memfile != NULL) {
+    /* In undo case we want to keep the set of qlreqdy used ID pointers... */
+    BKE_main_idmemset_transfer_ownership(bfd->main, fd->old_mainlist->first);
+  }
+  else {
+    BKE_main_idmemset_ensure(bfd->main);
+  }
   bfd->main->versionfile = fd->fileversion;
 
   bfd->type = BLENFILETYPE_BLEND;
