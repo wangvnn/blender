@@ -2301,14 +2301,7 @@ static void *read_struct(FileData *fd, BHead *bh, const char *blockname)
       }
       else {
         /* SDNA_CMP_EQUAL */
-        if (fd->memfile != NULL && !ELEM(bh->code, DATA, GLOB, DNA1, TEST, REND, USER, ENDB)) {
-          Main *bmain = fd->mainlist->first;
-          temp = BKE_main_idmemhash_unique_alloc(
-              bmain, NULL, MEM_mallocN, (size_t)bh->len, blockname);
-        }
-        else {
-          temp = MEM_mallocN(bh->len, blockname);
-        }
+        temp = MEM_mallocN(bh->len, blockname);
 #ifdef USE_BHEAD_READ_ON_DEMAND
         if (BHEADN_FROM_BHEAD(bh)->has_data) {
           memcpy(temp, (bh + 1), bh->len);
@@ -9114,7 +9107,7 @@ static BHead *read_libblock(FileData *fd,
         bool can_finalize_and_return = false;
 
         if (ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
-          /* Read WindowManager, Screen and WorkSpace IDs are never during undo (see
+          /* Read WindowManager, Screen and WorkSpace IDs are never actually used during undo (see
            * `setup_app_data()` in `blendfile.c`).
            * So we can just abort here, just ensuring libmapping is set accordingly. */
           can_finalize_and_return = true;
@@ -9169,6 +9162,13 @@ static BHead *read_libblock(FileData *fd,
     /* do after read_struct, for dna reconstruct */
     lb = which_libbase(main, idcode);
     if (lb) {
+      /* At this point, we know we are going to keep that newly read & allocated ID, so we need to
+       * reallocate it to ensure we actually get a unique memory address for it. */
+      if (!BKE_main_idmemhash_register_id(main, NULL, id)) {
+        id = BKE_main_idmemhash_unique_realloc(
+            main, NULL, id, MEM_reallocN_id, MEM_allocN_len(id), __func__);
+      }
+
       /* for ID_LINK_PLACEHOLDER check */
       oldnewmap_insert(fd->libmap, id_bhead->old, id, id_bhead->code);
 
