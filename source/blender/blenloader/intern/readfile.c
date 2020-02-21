@@ -505,7 +505,9 @@ static void add_main_to_main(Main *mainvar, Main *from)
   ListBase *lbarray[MAX_LIBARRAY], *fromarray[MAX_LIBARRAY];
   int a;
 
-  BLI_assert(ELEM(from->used_id_memset, NULL, mainvar->used_id_memset));
+  if (!ELEM(from->used_id_memhash, NULL, mainvar->used_id_memhash)) {
+    BLI_assert(ELEM(from->used_id_memhash, NULL, mainvar->used_id_memhash));
+  }
 
   set_listbasepointers(mainvar, lbarray);
   a = set_listbasepointers(from, fromarray);
@@ -564,7 +566,7 @@ void blo_split_main(ListBase *mainlist, Main *main)
   int i = 0;
   for (Library *lib = main->libraries.first; lib; lib = lib->id.next, i++) {
     Main *libmain = BKE_main_new();
-    BKE_main_idmemset_usefrom(libmain, main);
+    BKE_main_idmemhash_usefrom(libmain, main);
     libmain->curlib = lib;
     libmain->versionfile = lib->versionfile;
     libmain->subversionfile = lib->subversionfile;
@@ -675,7 +677,7 @@ static Main *blo_find_main(FileData *fd, const char *filepath, const char *relab
   }
 
   m = BKE_main_new();
-  BKE_main_idmemset_usefrom(m, mainlist->first);
+  BKE_main_idmemhash_usefrom(m, mainlist->first);
   BLI_addtail(mainlist, m);
 
   /* Add library data-block itself to 'main' Main, since libraries are **never** linked data.
@@ -2301,7 +2303,8 @@ static void *read_struct(FileData *fd, BHead *bh, const char *blockname)
         /* SDNA_CMP_EQUAL */
         if (fd->memfile != NULL && !ELEM(bh->code, DATA, GLOB, DNA1, TEST, REND, USER, ENDB)) {
           Main *bmain = fd->mainlist->first;
-          temp = BKE_main_idmemset_unique_alloc(bmain, MEM_mallocN, (size_t)bh->len, blockname);
+          temp = BKE_main_idmemhash_unique_alloc(
+              bmain, NULL, MEM_mallocN, (size_t)bh->len, blockname);
         }
         else {
           temp = MEM_mallocN(bh->len, blockname);
@@ -6672,6 +6675,13 @@ static void direct_link_scene(FileData *fd, Scene *sce)
 
   sce->toolsettings = newdataadr(fd, sce->toolsettings);
   if (sce->toolsettings) {
+
+    /* Reset last_location and last_hit, so they are not remembered across sessions. In some files
+     * these are also NaN, which could lead to crashes in painting. */
+    struct UnifiedPaintSettings *ups = &sce->toolsettings->unified_paint_settings;
+    zero_v3(ups->last_location);
+    ups->last_hit = 0;
+
     direct_link_paint_helper(fd, sce, (Paint **)&sce->toolsettings->sculpt);
     direct_link_paint_helper(fd, sce, (Paint **)&sce->toolsettings->vpaint);
     direct_link_paint_helper(fd, sce, (Paint **)&sce->toolsettings->wpaint);
@@ -7305,7 +7315,6 @@ static void direct_link_area(FileData *fd, ScrArea *area)
       sseq->scopes.sep_waveform_ibuf = NULL;
       sseq->scopes.vector_ibuf = NULL;
       sseq->scopes.histogram_ibuf = NULL;
-      sseq->compositor = NULL;
     }
     else if (sl->spacetype == SPACE_PROPERTIES) {
       SpaceProperties *sbuts = (SpaceProperties *)sl;
@@ -8267,7 +8276,7 @@ static void direct_link_library(FileData *fd, Library *lib, Main *main)
 
   /* new main */
   newmain = BKE_main_new();
-  BKE_main_idmemset_usefrom(newmain, fd->mainlist->first);
+  BKE_main_idmemhash_usefrom(newmain, fd->mainlist->first);
   BLI_addtail(fd->mainlist, newmain);
   newmain->curlib = lib;
 
@@ -9031,6 +9040,10 @@ static BHead *read_libblock(FileData *fd,
            * like it used to be. */
           BLI_remlink(fd->old_mainlist, libmain);
           BLI_remlink_safe(&oldmain->libraries, libmain->curlib);
+          /* We also need to transfer the unique id storage system, since that libmain now belongs
+           * to the new Main database. */
+          BKE_main_idmemhash_release(libmain);
+          BKE_main_idmemhash_usefrom(libmain, fd->mainlist->first);
           BLI_addtail(fd->mainlist, libmain);
           BLI_addtail(&main->libraries, libmain->curlib);
 
@@ -9138,8 +9151,8 @@ static BHead *read_libblock(FileData *fd,
             *r_id = id_old;
           }
 
-          const bool is_id_memaddress_already_registered = !BKE_main_idmemset_register_id(main,
-                                                                                          id_old);
+          const bool is_id_memaddress_already_registered = !BKE_main_idmemhash_register_id(
+              main, NULL, id_old);
           /* Should never fail, since we re-used an existing ID it should have already been
            * registered. */
           BLI_assert(is_id_memaddress_already_registered);
@@ -9872,10 +9885,10 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
   bfd->main = BKE_main_new();
   if (fd->memfile != NULL) {
     /* In undo case we want to keep the set of qlreqdy used ID pointers... */
-    BKE_main_idmemset_transfer_ownership(bfd->main, fd->old_mainlist->first);
+    BKE_main_idmemhash_transfer_ownership(bfd->main, fd->old_mainlist->first);
   }
   else {
-    BKE_main_idmemset_ensure(bfd->main);
+    BKE_main_idmemhash_ensure(bfd->main);
   }
   bfd->main->versionfile = fd->fileversion;
 
@@ -9992,6 +10005,15 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
 
     /* Skip in undo case. */
     if (fd->memfile == NULL) {
+      /* Note that we cannot recompute usercounts at this point in undo case, we play too much with
+       * IDs from different memory realms, and Main database is not in a fully valid state yet.
+       */
+      /* Some versioning code does expect some proper userrefcounting, e.g. in conversion from
+       * groups to collections... We could optimize out that first call when we are reading a
+       * current version file, but again this is really not a bottle neck currently. so not worth
+       * it. */
+      BKE_main_id_refcount_recompute(bfd->main, false);
+
       /* Yep, second splitting... but this is a very cheap operation, so no big deal. */
       blo_split_main(&mainlist, bfd->main);
       for (Main *mainvar = mainlist.first; mainvar; mainvar = mainvar->next) {
@@ -10000,11 +10022,9 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
       }
       blo_join_main(&mainlist);
 
-      /* Note that we cannot recompute usercounts at this point in undo case, we play too much with
-       * IDs from different memory realms, and Main database is not in a fully valid state yet.
-       */
-      /* Also, this does not take into account old, deprecated data, so we have to do it after
-       * `do_versions_after_linking()`. */
+      /* And we have to compute those userrefcounts again, as `do_versions_after_linking()` does
+       * not always properly handle user counts, and/or that function does not take into account
+       * old, deprecated data. */
       BKE_main_id_refcount_recompute(bfd->main, false);
 
       /* After all data has been read and versioned, uses LIB_TAG_NEW. */
@@ -11644,7 +11664,7 @@ static void split_main_newid(Main *mainptr, Main *main_newid)
   main_newid->subversionfile = mainptr->subversionfile;
   BLI_strncpy(main_newid->name, mainptr->name, sizeof(main_newid->name));
   main_newid->curlib = mainptr->curlib;
-  BKE_main_idmemset_usefrom(main_newid, mainptr);
+  BKE_main_idmemhash_usefrom(main_newid, mainptr);
 
   ListBase *lbarray[MAX_LIBARRAY];
   ListBase *lbarray_newid[MAX_LIBARRAY];
@@ -11701,6 +11721,13 @@ static void library_link_end(Main *mainl,
   mainl = NULL; /* blo_join_main free's mainl, cant use anymore */
 
   lib_link_all(*fd, mainvar);
+
+  /* Some versioning code does expect some proper userrefcounting, e.g. in conversion from
+   * groups to collections... We could optimize out that first call when we are reading a
+   * current version file, but again this is really not a bottle neck currently. so not worth
+   * it. */
+  BKE_main_id_refcount_recompute(mainvar, false);
+
   BKE_collections_after_lib_link(mainvar);
 
   /* Yep, second splitting... but this is a very cheap operation, so no big deal. */
@@ -11722,7 +11749,7 @@ static void library_link_end(Main *mainl,
   mainvar = (*fd)->mainlist->first;
   MEM_freeN((*fd)->mainlist);
 
-  /* This does not take into account old, deprecated data, so we have to do it after
+  /* This does not take into account old, deprecated data, so we also have to do it after
    * `do_versions_after_linking()`. */
   BKE_main_id_refcount_recompute(mainvar, false);
 
