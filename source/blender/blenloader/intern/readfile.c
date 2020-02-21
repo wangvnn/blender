@@ -9139,6 +9139,12 @@ static BHead *read_libblock(FileData *fd,
           BLI_addtail(new_lb, id_old);
 
           can_finalize_and_return = true;
+
+          const bool is_id_memaddress_already_registered = !BKE_main_idmemhash_register_id(
+              main, NULL, id_old);
+          /* Should never fail, since we re-used an existing ID it should have already been
+           * registered. */
+          BLI_assert(is_id_memaddress_already_registered);
         }
 
         if (can_finalize_and_return) {
@@ -9150,12 +9156,6 @@ static BHead *read_libblock(FileData *fd,
           if (r_id) {
             *r_id = id_old;
           }
-
-          const bool is_id_memaddress_already_registered = !BKE_main_idmemhash_register_id(
-              main, NULL, id_old);
-          /* Should never fail, since we re-used an existing ID it should have already been
-           * registered. */
-          BLI_assert(is_id_memaddress_already_registered);
 
           MEM_freeN(id);
           oldnewmap_free_unused(fd->datamap);
