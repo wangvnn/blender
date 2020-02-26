@@ -9165,8 +9165,7 @@ static BHead *read_libblock(FileData *fd,
       /* At this point, we know we are going to keep that newly read & allocated ID, so we need to
        * reallocate it to ensure we actually get a unique memory address for it. */
       if (!BKE_main_idmemhash_register_id(main, NULL, id)) {
-        id = BKE_main_idmemhash_unique_realloc(
-            main, NULL, id, MEM_reallocN_id, MEM_allocN_len(id), __func__);
+        id = BKE_main_idmemhash_unique_realloc(main, NULL, id);
       }
 
       /* for ID_LINK_PLACEHOLDER check */
