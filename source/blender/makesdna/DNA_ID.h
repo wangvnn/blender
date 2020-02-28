@@ -31,6 +31,8 @@
 extern "C" {
 #endif
 
+#include "DNA_defs.h"
+
 struct FileData;
 struct GHash;
 struct GPUTexture;
@@ -248,6 +250,12 @@ typedef struct ID {
 
   /** Reference linked ID which this one overrides. */
   IDOverrideLibrary *override_library;
+
+  /**
+   * A session-wide unique identifier for a given ID, that remain the same across potential
+   * re-allocations (e.g. due to undo/redo steps).
+   */
+  uint64_t session_uuid;
 
   /**
    * Only set for data-blocks which are coming from copy-on-write, points to

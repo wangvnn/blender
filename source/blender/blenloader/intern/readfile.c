@@ -8860,6 +8860,8 @@ static ID *create_placeholder(Main *mainvar, const short idcode, const char *idn
   BLI_addtail(lb, ph_id);
   id_sort_by_name(lb, ph_id, NULL);
 
+  BKE_lib_libblock_uuid_generate(ph_id);
+
   return ph_id;
 }
 
@@ -9159,6 +9161,8 @@ static BHead *read_libblock(FileData *fd,
       }
 
       BLI_addtail(lb, id);
+
+      BKE_lib_libblock_uuid_generate(id);
     }
     else {
       /* unknown ID type */
