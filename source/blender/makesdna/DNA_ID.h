@@ -245,17 +245,17 @@ typedef struct ID {
   int us;
   int icon_id;
   int recalc;
-  char _pad[4];
-  IDProperty *properties;
-
-  /** Reference linked ID which this one overrides. */
-  IDOverrideLibrary *override_library;
 
   /**
    * A session-wide unique identifier for a given ID, that remain the same across potential
    * re-allocations (e.g. due to undo/redo steps).
    */
-  uint64_t session_uuid;
+  unsigned int session_uuid;
+
+  IDProperty *properties;
+
+  /** Reference linked ID which this one overrides. */
+  IDOverrideLibrary *override_library;
 
   /**
    * Only set for data-blocks which are coming from copy-on-write, points to

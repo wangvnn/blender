@@ -2224,7 +2224,7 @@ void blo_make_idmap_from_main(FileData *fd, Main *bmain)
   if (fd->old_idmap != NULL) {
     BKE_main_idmap_destroy(fd->old_idmap);
   }
-  fd->old_idmap = BKE_main_idmap_create(bmain, false, NULL);
+  fd->old_idmap = BKE_main_idmap_create(bmain, false, NULL, MAIN_IDMAP_TYPE_UUID);
 }
 
 /* Create sibling mapping of libmap (i.e. old ID pointer values to new valid IDs), but for the
@@ -8115,7 +8115,8 @@ void blo_lib_link_restore(Main *oldmain,
                           Scene *curscene,
                           ViewLayer *cur_view_layer)
 {
-  struct IDNameLib_Map *id_map = BKE_main_idmap_create(newmain, true, oldmain);
+  struct IDNameLib_Map *id_map = BKE_main_idmap_create(
+      newmain, true, oldmain, MAIN_IDMAP_TYPE_NAME);
 
   for (WorkSpace *workspace = newmain->workspaces.first; workspace;
        workspace = workspace->id.next) {
@@ -9093,7 +9094,7 @@ static BHead *read_libblock(FileData *fd,
         /* Find the 'current' existing ID we want to reuse instead of the one we would read from
          * the undo memfile. */
         ID *id_old = do_partial_undo ?
-                         BKE_main_idmap_lookup(fd->old_idmap, idcode, id->name + 2, NULL) :
+                         BKE_main_idmap_lookup_uuid(fd->old_idmap, id->session_uuid) :
                          NULL;
         bool can_finalize_and_return = false;
 
@@ -9154,7 +9155,7 @@ static BHead *read_libblock(FileData *fd,
        * addresses for those as well. */
       if (fd->memfile != NULL && do_partial_undo && id->lib == NULL) {
         BLI_assert(fd->old_idmap != NULL);
-        ID *id_old = BKE_main_idmap_lookup(fd->old_idmap, idcode, id->name + 2, NULL);
+        ID *id_old = BKE_main_idmap_lookup_uuid(fd->old_idmap, id->session_uuid);
         if (id_old != NULL) {
           oldnewmap_insert(fd->libmap_undo_reused, id_old, id, id_bhead->code);
         }
