@@ -8056,7 +8056,8 @@ void blo_lib_link_restore(Main *oldmain,
                           Scene *curscene,
                           ViewLayer *cur_view_layer)
 {
-  struct IDNameLib_Map *id_map = BKE_main_idmap_create(newmain, true, oldmain);
+  struct IDNameLib_Map *id_map = BKE_main_idmap_create(
+      newmain, true, oldmain, MAIN_IDMAP_TYPE_NAME);
 
   for (WorkSpace *workspace = newmain->workspaces.first; workspace;
        workspace = workspace->id.next) {

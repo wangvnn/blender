@@ -1377,7 +1377,7 @@ void BKE_libblock_init_empty(ID *id)
   }
 }
 
-static uint64_t session_uuid = 0;
+static uint session_uuid = 0;
 /** Generate a session-wise uuid for the given \a id. */
 void BKE_lib_libblock_uuid_generate(ID *id)
 {
