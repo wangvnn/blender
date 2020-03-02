@@ -224,13 +224,18 @@ ID *BKE_main_idmap_lookup_uuid(struct IDNameLib_Map *id_map, const uint session_
 
 void BKE_main_idmap_destroy(struct IDNameLib_Map *id_map)
 {
-  struct IDNameLib_TypeMap *type_map = id_map->type_maps;
-  for (int i = 0; i < MAX_LIBARRAY; i++, type_map++) {
-    if (type_map->map) {
-      BLI_ghash_free(type_map->map, NULL, NULL);
-      type_map->map = NULL;
-      MEM_freeN(type_map->keys);
+  if (id_map->idmap_types & MAIN_IDMAP_TYPE_NAME) {
+    struct IDNameLib_TypeMap *type_map = id_map->type_maps;
+    for (int i = 0; i < MAX_LIBARRAY; i++, type_map++) {
+      if (type_map->map) {
+        BLI_ghash_free(type_map->map, NULL, NULL);
+        type_map->map = NULL;
+        MEM_freeN(type_map->keys);
+      }
     }
+  }
+  if (id_map->idmap_types & MAIN_IDMAP_TYPE_UUID) {
+    BLI_ghash_free(id_map->uuid_map, NULL, NULL);
   }
 
   if (id_map->valid_id_pointers != NULL) {
