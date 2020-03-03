@@ -954,7 +954,7 @@ void BKE_libblock_management_main_add(Main *bmain, void *idv)
   bmain->is_memfile_undo_written = false;
   BKE_main_unlock(bmain);
 
-  BKE_lib_libblock_uuid_ensure(id);
+  BKE_lib_libblock_session_uuid_ensure(id);
 }
 
 /** Remove a data-block from given main (set it to 'NO_MAIN' status). */
@@ -1241,7 +1241,7 @@ void *BKE_libblock_alloc(Main *bmain, short type, const char *name, const int fl
       /* alphabetic insertion: is in new_id */
       BKE_main_unlock(bmain);
 
-      BKE_lib_libblock_uuid_ensure(id);
+      BKE_lib_libblock_session_uuid_ensure(id);
 
       /* TODO to be removed from here! */
       if ((flag & LIB_ID_CREATE_NO_DEG_TAG) == 0) {
@@ -1378,7 +1378,7 @@ void BKE_libblock_init_empty(ID *id)
 }
 
 /** Generate a session-wise uuid for the given \a id. */
-void BKE_lib_libblock_uuid_ensure(ID *id)
+void BKE_lib_libblock_session_uuid_ensure(ID *id)
 {
   static uint global_session_uuid = 0;
 
