@@ -1384,6 +1384,11 @@ void BKE_lib_libblock_uuid_ensure(ID *id)
 
   if (id->session_uuid == MAIN_ID_SESSION_UUID_UNSET) {
     id->session_uuid = ++global_session_uuid;
+    /* In case overflow happens, still assign a valid ID. This way opening files many times works
+     * correctly. */
+    if (id->session_uuid == MAIN_ID_SESSION_UUID_UNSET) {
+      id->session_uuid = ++global_session_uuid;
+    }
   }
 }
 
