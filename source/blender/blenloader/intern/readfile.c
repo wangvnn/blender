@@ -8802,7 +8802,7 @@ static ID *create_placeholder(Main *mainvar, const short idcode, const char *idn
   BLI_addtail(lb, ph_id);
   id_sort_by_name(lb, ph_id, NULL);
 
-  BKE_lib_libblock_uuid_ensure(ph_id);
+  BKE_lib_libblock_session_uuid_ensure(ph_id);
 
   return ph_id;
 }
@@ -9023,7 +9023,7 @@ static BHead *read_libblock(FileData *fd,
         id->session_uuid = MAIN_ID_SESSION_UUID_UNSET;
       }
 
-      BKE_lib_libblock_uuid_ensure(id);
+      BKE_lib_libblock_session_uuid_ensure(id);
     }
     else {
       /* unknown ID type */
