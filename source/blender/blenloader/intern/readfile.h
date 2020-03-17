@@ -31,6 +31,7 @@
 #include "DNA_windowmanager_types.h" /* for ReportType */
 
 struct IDNameLib_Map;
+struct GSet;
 struct Key;
 struct MemFile;
 struct Object;
@@ -119,7 +120,6 @@ typedef struct FileData {
   struct OldNewMap *datamap;
   struct OldNewMap *globmap;
   struct OldNewMap *libmap;
-  struct OldNewMap *libmap_undo_reused; /* Used for undo. */
   struct OldNewMap *imamap;
   struct OldNewMap *movieclipmap;
   struct OldNewMap *scenemap;
@@ -135,7 +135,7 @@ typedef struct FileData {
   ListBase *mainlist;
   /** Used for undo. */
   ListBase *old_mainlist;
-  IDNameLib_Map *old_idmap;
+  struct IDNameLib_Map *old_idmap;
 
   struct ReportList *reports;
 } FileData;
@@ -167,8 +167,7 @@ void blo_end_sound_pointer_map(FileData *fd, struct Main *oldmain);
 void blo_make_packed_pointer_map(FileData *fd, struct Main *oldmain);
 void blo_end_packed_pointer_map(FileData *fd, struct Main *oldmain);
 void blo_add_library_pointer_map(ListBase *old_mainlist, FileData *fd);
-void blo_make_idmap_from_main(FileData *fd, struct Main *bmain);
-void blo_make_undo_reused_libmap(FileData *fd);
+void blo_make_old_idmap_from_main(FileData *fd, struct Main *bmain);
 
 void blo_filedata_free(FileData *fd);
 

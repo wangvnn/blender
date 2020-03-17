@@ -387,11 +387,7 @@ BlendFileData *BLO_read_from_memfile(Main *oldmain,
     if ((params->skip_flags & BLO_READ_SKIP_UNDO_OLD_MAIN) == 0) {
       /* Build idmap of old main (we only care about local data here, so we can do that after
        * split_main() call. */
-      blo_make_idmap_from_main(fd, old_mainlist.first);
-
-      /* Create sibling mapping of libmap (i.e. old ID pointer values to new valid IDs), but for
-       * the addresses from old main. */
-      blo_make_undo_reused_libmap(fd);
+      blo_make_old_idmap_from_main(fd, old_mainlist.first);
     }
 
     /* makes lookup of existing images in old main */

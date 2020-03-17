@@ -148,7 +148,10 @@ static void memfile_undosys_step_decode(struct bContext *C,
 
   bool use_old_bmain_data = true;
 
-  if (undo_direction > 0) {
+  if (!U.experimental.use_undo_speedup) {
+    use_old_bmain_data = false;
+  }
+  else if (undo_direction > 0) {
     /* Redo case.
      * The only time we should have to force a complete redo is when current step is tagged as a
      * redo barrier.
@@ -164,17 +167,12 @@ static void memfile_undosys_step_decode(struct bContext *C,
      * future' we can still re-use old data. However, if *next* undo step (i.e. the one immédiately
      * in the future, the one we are comming from) is a barrier, then we have to force a complete
      * undo.
-     * Likewise, if next step (the one we are comming from) was a non-memfile one, there is no
-     * guarantee that current bmain data actually reflects the status of unchanged datablocks in
-     * memfile, since changes might have been flushed to current bmain data without triggering any
-     * memfile step storage (typical common case e.g. when using edit modes).
+     * Note that non-memfile undo steps **should** not be an issue anymore, since we handle
+     * fine-grained update flags now.
      */
     UndoStep *us_next = us_p->next;
     if (us_next != NULL) {
       if (us_next->use_old_bmain_data == false) {
-        use_old_bmain_data = false;
-      }
-      if (us_next->type != BKE_UNDOSYS_TYPE_MEMFILE) {
         use_old_bmain_data = false;
       }
     }
