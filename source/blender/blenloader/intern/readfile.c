@@ -9498,7 +9498,7 @@ static BHead *read_libblock(FileData *fd,
     /* We do not need any remapping from this call here, since no ID pointer is valid in the data
      * currently (they are all pointing to old addresses, and need to go through `lib_link`
      * process). So we can pass NULL for the Main pointer parameter. */
-    BKE_id_full_swap(NULL, id, id_old);
+    BKE_lib_id_swap_full(NULL, id, id_old);
 
     BLI_addtail(new_lb, id_old);
     BLI_addtail(old_lb, id);

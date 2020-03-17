@@ -675,7 +675,7 @@ static void id_swap(Main *bmain, ID *id_a, ID *id_b, const bool do_full_id)
  * \param bmain May be NULL, in which case there will be no remapping of internal pointers to
  * itself.
  */
-void BKE_id_swap(Main *bmain, ID *id_a, ID *id_b)
+void BKE_lib_id_swap(Main *bmain, ID *id_a, ID *id_b)
 {
   id_swap(bmain, id_a, id_b, false);
 }
@@ -687,7 +687,7 @@ void BKE_id_swap(Main *bmain, ID *id_a, ID *id_b)
  * \param bmain May be NULL, in which case there will be no remapping of internal pointers to
  * itself.
  */
-void BKE_id_full_swap(Main *bmain, ID *id_a, ID *id_b)
+void BKE_lib_id_swap_full(Main *bmain, ID *id_a, ID *id_b)
 {
   id_swap(bmain, id_a, id_b, true);
 }
