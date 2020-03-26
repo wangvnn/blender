@@ -238,7 +238,7 @@
 #define USE_GHASH_RESTORE_POINTER
 
 /* Define this to have verbose debug prints. */
-//#define USE_DEBUG_PRINT
+#define USE_DEBUG_PRINT
 
 #ifdef USE_DEBUG_PRINT
 #  define DEBUG_PRINTF(...) printf(__VA_ARGS__)
@@ -9357,8 +9357,9 @@ static BHead *read_libblock(FileData *fd,
        * and evaluate, not actual file reading. */
       bhead = read_data_into_oldnewmap(fd, id_bhead, allocname);
 
-      DEBUG_PRINTF(
-          "%s: ID %s is unchanged: %d\n", __func__, id->name, fd->are_memchunks_identical);
+      if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+        DEBUG_PRINTF(
+            "%s: ID %s is unchanged: %d\n", __func__, id->name, fd->are_memchunks_identical);
 
       if (fd->memfile != NULL) {
         BLI_assert(fd->old_idmap != NULL || !do_partial_undo);
@@ -9367,12 +9368,36 @@ static BHead *read_libblock(FileData *fd,
 
         /* Find the 'current' existing ID we want to reuse instead of the one we would read from
          * the undo memfile. */
-        DEBUG_PRINTF("\t Looking for ID %s with uuid %u instead of newly read one\n",
-                     id->name,
-                     id->session_uuid);
+        if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+          DEBUG_PRINTF("\t Looking for ID %s with uuid %u instead of newly read one\n",
+                       id->name,
+                       id->session_uuid);
         id_old = do_partial_undo ? BKE_main_idmap_lookup_uuid(fd->old_idmap, id->session_uuid) :
                                    NULL;
         bool can_finalize_and_return = false;
+
+        if (id_old != NULL &&
+            ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT)) {
+          DEBUG_PRINTF("\t\t\tRecalc: read | existing\n");
+          DEBUG_PRINTF("\t\t\tCOW   :   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_COPY_ON_WRITE) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_COPY_ON_WRITE) != 0);
+          DEBUG_PRINTF("\t\t\tTransf:   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_TRANSFORM) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_TRANSFORM) != 0);
+          DEBUG_PRINTF("\t\t\tGeom  :   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_GEOMETRY) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_GEOMETRY) != 0);
+          DEBUG_PRINTF("\t\t\tAnim  :   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_ANIMATION) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_ANIMATION) != 0);
+          DEBUG_PRINTF("\t\t\tShade :   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_SHADING) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_SHADING) != 0);
+          DEBUG_PRINTF("\t\t\tSel   :   %d  | %d\n",
+                       (id->recalc_undo_accumulated & ID_RECALC_SELECT) != 0,
+                       (id_old->recalc_undo_accumulated & ID_RECALC_SELECT) != 0);
+        }
 
         if (ELEM(idcode, ID_WM, ID_SCR, ID_WS)) {
           /* Read WindowManager, Screen and WorkSpace IDs are never actually used during undo (see
@@ -9406,7 +9431,8 @@ static BHead *read_libblock(FileData *fd,
         }
 
         if (can_finalize_and_return) {
-          DEBUG_PRINTF("Re-using existing ID %s instead of newly read one\n", id_old->name);
+          if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+            DEBUG_PRINTF("Re-using existing ID %s instead of newly read one\n", id_old->name);
           oldnewmap_insert(fd->libmap, id_bhead->old, id_old, id_bhead->code);
           oldnewmap_insert(fd->libmap, id_old, id_old, id_bhead->code);
 
@@ -9438,6 +9464,8 @@ static BHead *read_libblock(FileData *fd,
              * actually perform a depsgraph update, otherwise we'd only ever use the flags from one
              * of the steps, and never get proper flags matching all others. */
             id_old->recalc_undo_accumulated |= id->recalc_undo_accumulated;
+
+            id_old->recalc &= ~(ID_RECALC_COPY_ON_WRITE);
           }
 
           MEM_freeN(id);
@@ -9456,9 +9484,10 @@ static BHead *read_libblock(FileData *fd,
        * addresses for those as well. */
       if (fd->memfile != NULL && do_partial_undo && id->lib == NULL) {
         BLI_assert(fd->old_idmap != NULL);
-        DEBUG_PRINTF("\t Looking for ID %s with uuid %u instead of newly read one\n",
-                     id->name,
-                     id->session_uuid);
+        if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+          DEBUG_PRINTF("\t Looking for ID %s with uuid %u instead of newly read one\n",
+                       id->name,
+                       id->session_uuid);
         id_old = BKE_main_idmap_lookup_uuid(fd->old_idmap, id->session_uuid);
         if (id_old != NULL) {
           BLI_assert(MEM_allocN_len(id) == MEM_allocN_len(id_old));
@@ -9474,10 +9503,12 @@ static BHead *read_libblock(FileData *fd,
       /* At this point, we know we are going to keep that newly read & allocated ID, so we need to
        * reallocate it to ensure we actually get a unique memory address for it. */
       if (!do_id_swap) {
-        DEBUG_PRINTF("using newly-read ID %s to a new mem address\n", id->name);
+        if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+          DEBUG_PRINTF("using newly-read ID %s to a new mem address\n", id->name);
       }
       else {
-        DEBUG_PRINTF("using newly-read ID %s to its old, already existing address\n", id->name);
+        if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+          DEBUG_PRINTF("using newly-read ID %s to its old, already existing address\n", id->name);
       }
 
       /* for ID_LINK_PLACEHOLDER check */
@@ -9699,10 +9730,11 @@ static BHead *read_libblock(FileData *fd,
     BLI_addtail(old_lb, id);
   }
   else if (fd->memfile != NULL) {
-    DEBUG_PRINTF("We had to fully re-recreate ID %s (old addr: %p, new addr: %p)...\n",
-                 id->name,
-                 id_old,
-                 id);
+    if (ELEM(GS(id->name), ID_SCE, ID_OB, ID_ME, ID_LA, ID_CA, ID_GR, ID_MA, ID_TE, ID_NT))
+      DEBUG_PRINTF("We had to fully re-recreate ID %s (old addr: %p, new addr: %p)...\n",
+                   id->name,
+                   id_old,
+                   id);
   }
 
   return (bhead);

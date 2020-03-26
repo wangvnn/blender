@@ -660,6 +660,8 @@ bool BKE_undosys_step_undo_with_data_ex(UndoStack *ustack,
                                         UndoStep *us,
                                         bool use_skip)
 {
+  printf("\n\nINIT UNDO STEP\n");
+  BKE_undosys_print(ustack);
   UNDO_NESTED_ASSERT(false);
   if (us) {
     undosys_stack_validate(ustack, true);
@@ -711,8 +713,12 @@ bool BKE_undosys_step_undo_with_data_ex(UndoStack *ustack,
       } while ((us_active != us_iter) && (us_iter = us_iter->prev));
     }
 
+    printf("\n\nEND UNDO STEP\n");
+    BKE_undosys_print(ustack);
     return true;
   }
+  printf("\n\nEND UNDO STEP\n");
+  BKE_undosys_print(ustack);
   return false;
 }
 bool BKE_undosys_step_undo_with_data(UndoStack *ustack, bContext *C, UndoStep *us)
@@ -737,6 +743,8 @@ bool BKE_undosys_step_redo_with_data_ex(UndoStack *ustack,
                                         UndoStep *us,
                                         bool use_skip)
 {
+  printf("\n\nINIT REDO STEP\n");
+  BKE_undosys_print(ustack);
   UNDO_NESTED_ASSERT(false);
   UndoStep *us_next = us ? us->next : NULL;
   /* Unlike undo accumulate, we always use the next. */
@@ -777,8 +785,12 @@ bool BKE_undosys_step_redo_with_data_ex(UndoStack *ustack,
         ustack->step_active = us_iter;
       } while ((us_active != us_iter) && (us_iter = us_iter->next));
     }
+    printf("\n\nEND REDO STEP\n");
+    BKE_undosys_print(ustack);
     return true;
   }
+  printf("\n\nEND REDO STEP\n");
+  BKE_undosys_print(ustack);
   return false;
 }
 bool BKE_undosys_step_redo_with_data(UndoStack *ustack, bContext *C, UndoStep *us)
