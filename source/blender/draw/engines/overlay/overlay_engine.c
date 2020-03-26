@@ -98,6 +98,7 @@ static void OVERLAY_engine_init(void *vedata)
   OVERLAY_image_init(vedata);
   OVERLAY_outline_init(vedata);
   OVERLAY_wireframe_init(vedata);
+  OVERLAY_paint_init(vedata);
 }
 
 static void OVERLAY_cache_init(void *vedata)
@@ -161,6 +162,7 @@ static void OVERLAY_cache_init(void *vedata)
   OVERLAY_motion_path_cache_init(vedata);
   OVERLAY_outline_cache_init(vedata);
   OVERLAY_particle_cache_init(vedata);
+  OVERLAY_pointcloud_cache_init(vedata);
   OVERLAY_wireframe_cache_init(vedata);
 }
 
@@ -205,6 +207,11 @@ static bool overlay_object_is_edit_mode(const OVERLAY_PrivateData *pd, const Obj
         return pd->ctx_mode == CTX_MODE_EDIT_METABALL;
       case OB_FONT:
         return pd->ctx_mode == CTX_MODE_EDIT_TEXT;
+      case OB_HAIR:
+      case OB_POINTCLOUD:
+      case OB_VOLUME:
+        /* No edit mode yet. */
+        return false;
     }
   }
   return false;
@@ -223,8 +230,16 @@ static void OVERLAY_cache_populate(void *vedata, Object *ob)
   const bool in_paint_mode = (ob == draw_ctx->obact) &&
                              (draw_ctx->object_mode & OB_MODE_ALL_PAINT);
   const bool in_sculpt_mode = (ob == draw_ctx->obact) && (ob->sculpt != NULL);
-  const bool has_surface = ELEM(
-      ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_MBALL, OB_FONT, OB_GPENCIL);
+  const bool has_surface = ELEM(ob->type,
+                                OB_MESH,
+                                OB_CURVE,
+                                OB_SURF,
+                                OB_MBALL,
+                                OB_FONT,
+                                OB_GPENCIL,
+                                OB_HAIR,
+                                OB_POINTCLOUD,
+                                OB_VOLUME);
   const bool draw_surface = (ob->dt >= OB_WIRE) && (renderable || (ob->dt == OB_WIRE));
   const bool draw_facing = draw_surface && (pd->overlay.flag & V3D_OVERLAY_FACE_ORIENTATION);
   const bool draw_bones = (pd->overlay.flag & V3D_OVERLAY_HIDE_BONES) == 0;
@@ -289,7 +304,7 @@ static void OVERLAY_cache_populate(void *vedata, Object *ob)
   else if (in_pose_mode && draw_bones) {
     OVERLAY_pose_armature_cache_populate(vedata, ob);
   }
-  else if (in_paint_mode) {
+  else if (in_paint_mode && !pd->hide_overlays) {
     switch (draw_ctx->object_mode) {
       case OB_MODE_VERTEX_PAINT:
         OVERLAY_paint_vertex_cache_populate(vedata, ob);
@@ -359,6 +374,12 @@ static void OVERLAY_cache_populate(void *vedata, Object *ob)
 
   if (!BLI_listbase_is_empty(&ob->particlesystem)) {
     OVERLAY_particle_cache_populate(vedata, ob);
+  }
+
+  /* TODO: these should not be overlays, just here for testing since it's
+   * easier to implement than integrating it into eevee/workbench. */
+  if (ob->type == OB_POINTCLOUD) {
+    OVERLAY_pointcloud_cache_populate(vedata, ob);
   }
 
   /* Relationship, object center, bounbox ... */
@@ -434,6 +455,7 @@ static void OVERLAY_draw_scene(void *vedata)
   OVERLAY_armature_draw(vedata);
   OVERLAY_particle_draw(vedata);
   OVERLAY_metaball_draw(vedata);
+  OVERLAY_pointcloud_draw(vedata);
   OVERLAY_gpencil_draw(vedata);
   OVERLAY_extra_draw(vedata);
 

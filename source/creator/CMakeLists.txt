@@ -111,6 +111,10 @@ if(WITH_FREESTYLE)
   add_definitions(-DWITH_FREESTYLE)
 endif()
 
+if(WITH_XR_OPENXR)
+  add_definitions(-DWITH_XR_OPENXR)
+endif()
+
 # Setup the exe sources and buildinfo
 set(SRC
   creator.c
@@ -300,12 +304,10 @@ if(WITH_MEM_JEMALLOC)
   )
 endif()
 
-if(WITH_INTERNATIONAL)
-  list(APPEND BLENDER_TEXT_FILES
-    ${CMAKE_SOURCE_DIR}/release/datafiles/LICENSE-droidsans.ttf.txt
-    ${CMAKE_SOURCE_DIR}/release/datafiles/LICENSE-bmonofont-i18n.ttf.txt
-  )
-endif()
+list(APPEND BLENDER_TEXT_FILES
+  ${CMAKE_SOURCE_DIR}/release/datafiles/LICENSE-droidsans.ttf.txt
+  ${CMAKE_SOURCE_DIR}/release/datafiles/LICENSE-bmonofont-i18n.ttf.txt
+)
 
 
 # -----------------------------------------------------------------------------
@@ -383,14 +385,15 @@ if(WITH_PYTHON)
   unset(FREESTYLE_EXCLUDE_CONDITIONAL)
 endif()
 
+# fonts
+install(
+  DIRECTORY
+    ${CMAKE_SOURCE_DIR}/release/datafiles/fonts
+  DESTINATION ${TARGETDIR_VER}/datafiles
+)
+
 # localization
 if(WITH_INTERNATIONAL)
-  install(
-    DIRECTORY
-      ${CMAKE_SOURCE_DIR}/release/datafiles/fonts
-    DESTINATION ${TARGETDIR_VER}/datafiles
-  )
-
   set(_locale_dir "${CMAKE_SOURCE_DIR}/release/datafiles/locale")
   set(_locale_target_dir ${TARGETDIR_VER}/datafiles/locale)
 
@@ -856,6 +859,8 @@ elseif(WIN32)
       ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_debug_gpu_glitchworkaround.cmd
       ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_debug_log.cmd
       ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_factory_startup.cmd
+      ${CMAKE_SOURCE_DIR}/release/windows/batch/blender_oculus.cmd
+      ${CMAKE_SOURCE_DIR}/release/windows/batch/oculus.json
     DESTINATION "."
   )
 

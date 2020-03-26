@@ -95,6 +95,7 @@ typedef struct OVERLAY_PassList {
   DRWPass *paint_color_ps;
   DRWPass *paint_overlay_ps;
   DRWPass *particle_ps;
+  DRWPass *pointcloud_ps;
   DRWPass *sculpt_mask_ps;
   DRWPass *wireframe_ps;
   DRWPass *wireframe_xray_ps;
@@ -251,6 +252,7 @@ typedef struct OVERLAY_PrivateData {
   DRWShadingGroup *paint_face_grp;
   DRWShadingGroup *particle_dots_grp;
   DRWShadingGroup *particle_shapes_grp;
+  DRWShadingGroup *pointcloud_dots_grp;
   DRWShadingGroup *sculpt_mask_grp;
   DRWShadingGroup *wires_grp[2][2];     /* With and without coloring. */
   DRWShadingGroup *wires_all_grp[2][2]; /* With and without coloring. */
@@ -314,6 +316,9 @@ typedef struct OVERLAY_PrivateData {
     bool do_pose_xray;
     bool do_pose_fade_geom;
   } armature;
+  struct {
+    bool in_front;
+  } painting;
   struct {
     DRWCallBuffer *handle[2];
   } mball;
@@ -522,6 +527,7 @@ void OVERLAY_outline_cache_populate(OVERLAY_Data *vedata,
                                     bool init_dupli);
 void OVERLAY_outline_draw(OVERLAY_Data *vedata);
 
+void OVERLAY_paint_init(OVERLAY_Data *vedata);
 void OVERLAY_paint_cache_init(OVERLAY_Data *vedata);
 void OVERLAY_paint_texture_cache_populate(OVERLAY_Data *vedata, Object *ob);
 void OVERLAY_paint_vertex_cache_populate(OVERLAY_Data *vedata, Object *ob);
@@ -531,6 +537,10 @@ void OVERLAY_paint_draw(OVERLAY_Data *vedata);
 void OVERLAY_particle_cache_init(OVERLAY_Data *vedata);
 void OVERLAY_particle_cache_populate(OVERLAY_Data *vedata, Object *ob);
 void OVERLAY_particle_draw(OVERLAY_Data *vedata);
+
+void OVERLAY_pointcloud_cache_init(OVERLAY_Data *vedata);
+void OVERLAY_pointcloud_cache_populate(OVERLAY_Data *vedata, Object *ob);
+void OVERLAY_pointcloud_draw(OVERLAY_Data *vedata);
 
 void OVERLAY_sculpt_cache_init(OVERLAY_Data *vedata);
 void OVERLAY_sculpt_cache_populate(OVERLAY_Data *vedata, Object *ob);
@@ -597,6 +607,7 @@ GPUShader *OVERLAY_shader_paint_weight(void);
 GPUShader *OVERLAY_shader_paint_wire(void);
 GPUShader *OVERLAY_shader_particle_dot(void);
 GPUShader *OVERLAY_shader_particle_shape(void);
+GPUShader *OVERLAY_shader_pointcloud_dot(void);
 GPUShader *OVERLAY_shader_sculpt_mask(void);
 GPUShader *OVERLAY_shader_volume_velocity(bool use_needle);
 GPUShader *OVERLAY_shader_wireframe(void);

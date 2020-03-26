@@ -561,6 +561,9 @@ struct RegionView3D *ED_view3d_context_rv3d(struct bContext *C);
 bool ED_view3d_context_user_region(struct bContext *C,
                                    struct View3D **r_v3d,
                                    struct ARegion **r_ar);
+bool ED_view3d_area_user_region(const struct ScrArea *sa,
+                                const struct View3D *v3d,
+                                struct ARegion **r_ar);
 bool ED_operator_rv3d_user_region_poll(struct bContext *C);
 
 void ED_view3d_init_mats_rv3d(struct Object *ob, struct RegionView3D *rv3d);
@@ -584,7 +587,8 @@ void ED_draw_object_facemap(struct Depsgraph *depsgraph,
 struct RenderEngineType *ED_view3d_engine_type(const struct Scene *scene, int drawtype);
 
 bool ED_view3d_context_activate(struct bContext *C);
-void ED_view3d_draw_setup_view(struct wmWindow *win,
+void ED_view3d_draw_setup_view(const struct wmWindowManager *wm,
+                               struct wmWindow *win,
                                struct Depsgraph *depsgraph,
                                struct Scene *scene,
                                struct ARegion *region,
@@ -670,8 +674,10 @@ bool ED_view3d_distance_set_from_location(struct RegionView3D *rv3d,
                                           const float dist_co[3],
                                           const float dist_min);
 
-float ED_scene_grid_scale(const struct Scene *scene, const char **grid_unit);
-float ED_view3d_grid_scale(const struct Scene *scene, struct View3D *v3d, const char **grid_unit);
+float ED_scene_grid_scale(const struct Scene *scene, const char **r_grid_unit);
+float ED_view3d_grid_scale(const struct Scene *scene,
+                           struct View3D *v3d,
+                           const char **r_grid_unit);
 void ED_view3d_grid_steps(const struct Scene *scene,
                           struct View3D *v3d,
                           struct RegionView3D *rv3d,
@@ -679,7 +685,7 @@ void ED_view3d_grid_steps(const struct Scene *scene,
 float ED_view3d_grid_view_scale(struct Scene *scene,
                                 struct View3D *v3d,
                                 struct RegionView3D *rv3d,
-                                const char **grid_unit);
+                                const char **r_grid_unit);
 
 void ED_scene_draw_fps(const struct Scene *scene, int xoffset, int *yoffset);
 
@@ -729,6 +735,18 @@ void ED_view3d_buttons_region_layout_ex(const struct bContext *C,
 /* view3d_view.c */
 bool ED_view3d_local_collections_set(struct Main *bmain, struct View3D *v3d);
 void ED_view3d_local_collections_reset(struct bContext *C, const bool reset_all);
+
+#ifdef WITH_XR_OPENXR
+void ED_view3d_xr_mirror_update(const struct ScrArea *area,
+                                const struct View3D *v3d,
+                                const bool enable);
+void ED_view3d_xr_shading_update(struct wmWindowManager *wm,
+                                 const View3D *v3d,
+                                 const struct Scene *scene);
+bool ED_view3d_is_region_xr_mirror_active(const struct wmWindowManager *wm,
+                                          const struct View3D *v3d,
+                                          const struct ARegion *region);
+#endif
 
 #ifdef __cplusplus
 }

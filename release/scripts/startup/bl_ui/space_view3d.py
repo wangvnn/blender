@@ -393,7 +393,7 @@ class _draw_tool_settings_context_mode:
         }:
             # is_paint = False
             pass
-        elif tool.idname == "Cutter":
+        elif tool.idname == "builtin.cutter":
             row = layout.row(align=True)
             row.prop(context.tool_settings.gpencil_sculpt, "intersection_threshold")
             return False
@@ -2157,6 +2157,16 @@ class VIEW3D_MT_camera_add(Menu):
         layout.operator("object.camera_add", text="Camera", icon='OUTLINER_OB_CAMERA')
 
 
+class VIEW3D_MT_volume_add(Menu):
+    bl_idname = "VIEW3D_MT_volume_add"
+    bl_label = "Volume"
+
+    def draw(self, _context):
+        layout = self.layout
+        layout.operator("object.volume_import", text="Import OpenVDB...", icon='OUTLINER_DATA_VOLUME')
+        layout.operator("object.volume_add", text="Empty", icon='OUTLINER_DATA_VOLUME')
+
+
 class VIEW3D_MT_add(Menu):
     bl_label = "Add"
     bl_translation_context = i18n_contexts.operator_default
@@ -2179,6 +2189,11 @@ class VIEW3D_MT_add(Menu):
         layout.menu("VIEW3D_MT_surface_add", icon='OUTLINER_OB_SURFACE')
         layout.menu("VIEW3D_MT_metaball_add", text="Metaball", icon='OUTLINER_OB_META')
         layout.operator("object.text_add", text="Text", icon='OUTLINER_OB_FONT')
+        if hasattr(bpy.data, "hairs"):
+            layout.operator("object.hair_add", text="Hair", icon='OUTLINER_OB_HAIR')
+        if hasattr(bpy.data, "pointclouds"):
+            layout.operator("object.pointcloud_add", text="Point Cloud", icon='OUTLINER_OB_POINTCLOUD')
+        layout.menu("VIEW3D_MT_volume_add", text="Volume", icon='OUTLINER_OB_VOLUME')
         layout.operator_menu_enum("object.gpencil_add", "type", text="Grease Pencil", icon='OUTLINER_OB_GREASEPENCIL')
 
         layout.separator()
@@ -2924,6 +2939,32 @@ class VIEW3D_MT_gpencil_vertex_group(Menu):
             layout.operator("gpencil.vertex_group_deselect", text="Deselect")
 
 
+class VIEW3D_MT_paint_weight_lock(Menu):
+    bl_label = "Vertex Group Locks"
+
+    def draw(self, _context):
+        layout = self.layout
+
+        op = layout.operator("object.vertex_group_lock", icon='LOCKED', text="Lock All")
+        op.action, op.mask = 'LOCK', 'ALL'
+        op = layout.operator("object.vertex_group_lock", icon='UNLOCKED', text="Unlock All")
+        op.action, op.mask = 'UNLOCK', 'ALL'
+        op = layout.operator("object.vertex_group_lock", icon='LOCKED', text="Lock Selected")
+        op.action, op.mask = 'LOCK', 'SELECTED'
+        op = layout.operator("object.vertex_group_lock", icon='UNLOCKED', text="Unlock Selected")
+        op.action, op.mask = 'UNLOCK', 'SELECTED'
+        op = layout.operator("object.vertex_group_lock", icon='LOCKED', text="Lock Unselected")
+        op.action, op.mask = 'LOCK', 'UNSELECTED'
+        op = layout.operator("object.vertex_group_lock", icon='UNLOCKED', text="Unlock Unselected")
+        op.action, op.mask = 'UNLOCK', 'UNSELECTED'
+        op = layout.operator("object.vertex_group_lock", text="Lock Only Selected")
+        op.action, op.mask = 'LOCK', 'INVERT_UNSELECTED'
+        op = layout.operator("object.vertex_group_lock", text="Lock Only Unselected")
+        op.action, op.mask = 'UNLOCK', 'INVERT_UNSELECTED'
+        op = layout.operator("object.vertex_group_lock", text="Invert Locks")
+        op.action, op.mask = 'INVERT', 'ALL'
+
+
 class VIEW3D_MT_paint_weight(Menu):
     bl_label = "Weights"
 
@@ -2964,6 +3005,8 @@ class VIEW3D_MT_paint_weight(Menu):
             layout.separator()
 
             layout.operator("paint.weight_set")
+
+        layout.menu("VIEW3D_MT_paint_weight_lock", text="Locks")
 
     def draw(self, _context):
         self.draw_generic(self.layout, is_editmode=False)
@@ -5428,6 +5471,9 @@ class VIEW3D_PT_object_type_visibility(Panel):
             ("surf", "Surface"),
             ("meta", "Meta"),
             ("font", "Text"),
+            ("hair", "Hair"),
+            ("pointcloud", "Point Cloud"),
+            ("volume", "Volume"),
             ("grease_pencil", "Grease Pencil"),
             (None, None),
             # Other
@@ -5443,6 +5489,11 @@ class VIEW3D_PT_object_type_visibility(Panel):
         for attr, attr_name in attr_object_types:
             if attr is None:
                 col.separator()
+                continue
+
+            if attr == "hair" and not hasattr(bpy.data, "hairs"):
+                continue
+            elif attr == "pointcloud" and not hasattr(bpy.data, "pointclouds"):
                 continue
 
             attr_v = "show_object_viewport_" f"{attr:s}"
@@ -7254,6 +7305,7 @@ classes = (
     VIEW3D_MT_light_add,
     VIEW3D_MT_lightprobe_add,
     VIEW3D_MT_camera_add,
+    VIEW3D_MT_volume_add,
     VIEW3D_MT_add,
     VIEW3D_MT_image_add,
     VIEW3D_MT_object,
@@ -7278,6 +7330,7 @@ classes = (
     VIEW3D_MT_vertex_group,
     VIEW3D_MT_gpencil_vertex_group,
     VIEW3D_MT_paint_weight,
+    VIEW3D_MT_paint_weight_lock,
     VIEW3D_MT_sculpt,
     VIEW3D_MT_sculpt_set_pivot,
     VIEW3D_MT_mask,
