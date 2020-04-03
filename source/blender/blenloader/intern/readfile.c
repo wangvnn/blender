@@ -9456,8 +9456,6 @@ static BHead *read_libblock(FileData *fd,
              * actually perform a depsgraph update, otherwise we'd only ever use the flags from one
              * of the steps, and never get proper flags matching all others. */
             id_old->recalc_undo_accumulated |= id->recalc_undo_accumulated;
-
-            id_old->recalc &= ~(ID_RECALC_COPY_ON_WRITE);
           }
 
           MEM_freeN(id);
