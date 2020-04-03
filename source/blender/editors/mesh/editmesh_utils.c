@@ -406,10 +406,10 @@ void EDBM_mesh_load(Main *bmain, Object *ob)
 void EDBM_mesh_free(BMEditMesh *em)
 {
   /* These tables aren't used yet, so it's not strictly necessary
-   * to 'end' them (with 'e' param) but if someone tries to start
-   * using them, having these in place will save a lot of pain */
-  ED_mesh_mirror_spatial_table(NULL, NULL, NULL, NULL, 'e');
-  ED_mesh_mirror_topo_table(NULL, NULL, 'e');
+   * to 'end' them but if someone tries to start using them,
+   * having these in place will save a lot of pain. */
+  ED_mesh_mirror_spatial_table_end(NULL);
+  ED_mesh_mirror_topo_table_end(NULL);
 
   BKE_editmesh_free(em);
 }
@@ -539,7 +539,7 @@ UvVertMap *BM_uv_vert_map_create(BMesh *bm,
   UvVertMap *vmap;
   UvMapVert *buf;
   MLoopUV *luv;
-  unsigned int a;
+  uint a;
   int totverts, i, totuv, totfaces;
   const int cd_loop_uv_offset = CustomData_get_offset(&bm->ldata, CD_MLOOPUV);
   bool *winding = NULL;
@@ -669,7 +669,7 @@ UvVertMap *BM_uv_vert_map_create(BMesh *bm,
   return vmap;
 }
 
-UvMapVert *BM_uv_vert_map_at_index(UvVertMap *vmap, unsigned int v)
+UvMapVert *BM_uv_vert_map_at_index(UvVertMap *vmap, uint v)
 {
   return vmap->vert[v];
 }
@@ -832,7 +832,7 @@ UvElementMap *BM_uv_element_map_create(BMesh *bm,
   }
 
   if (do_islands) {
-    unsigned int *map;
+    uint *map;
     BMFace **stack;
     int stacksize = 0;
     UvElement *islandbuf;
@@ -1224,7 +1224,7 @@ BMFace *EDBM_verts_mirror_get_face(BMEditMesh *em, BMFace *f)
   BMVert **v_mirr_arr = BLI_array_alloca(v_mirr_arr, f->len);
 
   BMLoop *l_iter, *l_first;
-  unsigned int i = 0;
+  uint i = 0;
 
   l_iter = l_first = BM_FACE_FIRST_LOOP(f);
   do {

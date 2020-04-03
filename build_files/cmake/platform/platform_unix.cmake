@@ -196,13 +196,13 @@ if(WITH_OPENCOLLADA)
   find_package_wrapper(OpenCOLLADA)
   if(OPENCOLLADA_FOUND)
     if(WITH_STATIC_LIBS)
-      # PCRE and XML2 are bundled with OpenCollada.
-      set(PCRE_LIBRARIES pcre)
-      set(XML2_LIBRARIES xml2)
+      # PCRE is bundled with OpenCollada without headers, so can't use
+      # find_package reliably to detect it.
+      set(PCRE_LIBRARIES ${LIBDIR}/opencollada/lib/libpcre.a)
     else()
-      find_package_wrapper(XML2)
       find_package_wrapper(PCRE)
     endif()
+    find_package_wrapper(XML2)
   else()
     set(WITH_OPENCOLLADA OFF)
   endif()

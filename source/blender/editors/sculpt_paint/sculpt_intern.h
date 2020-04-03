@@ -303,7 +303,7 @@ typedef enum {
  * Is used as a storage for either original or modified geometry. */
 typedef struct SculptUndoNodeGeometry {
   /* Is used for sanity check, helping with ensuring that two and only two
-   * geometry pushes happenned in the undo stack. */
+   * geometry pushes happened in the undo stack. */
   bool is_initialized;
 
   CustomData vdata;
@@ -726,6 +726,7 @@ SculptUndoNode *SCULPT_undo_push_node(Object *ob, PBVHNode *node, SculptUndoType
 SculptUndoNode *SCULPT_undo_get_node(PBVHNode *node);
 void SCULPT_undo_push_begin(const char *name);
 void SCULPT_undo_push_end(void);
+void SCULPT_undo_push_end_ex(const bool use_nested_undo);
 
 void SCULPT_vertcos_to_key(Object *ob, KeyBlock *kb, const float (*vertCos)[3]);
 

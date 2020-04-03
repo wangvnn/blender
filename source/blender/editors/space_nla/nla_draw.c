@@ -313,7 +313,7 @@ static void nla_strip_get_color_inside(AnimData *adt, NlaStrip *strip, float col
 }
 
 /* helper call for drawing influence/time control curves for a given NLA-strip */
-static void nla_draw_strip_curves(NlaStrip *strip, float yminc, float ymaxc, unsigned int pos)
+static void nla_draw_strip_curves(NlaStrip *strip, float yminc, float ymaxc, uint pos)
 {
   const float yheight = ymaxc - yminc;
 
@@ -828,7 +828,7 @@ void draw_nla_channel_list(const bContext *C, bAnimContext *ac, ARegion *region)
 
   /* need to do a view-sync here, so that the keys area doesn't jump around
    * (it must copy this) */
-  UI_view2d_sync(NULL, ac->sa, v2d, V2D_LOCK_COPY);
+  UI_view2d_sync(NULL, ac->area, v2d, V2D_LOCK_COPY);
 
   /* draw channels */
   { /* first pass: just the standard GL-drawing for backdrop + text */

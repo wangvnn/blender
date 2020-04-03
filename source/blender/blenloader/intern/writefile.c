@@ -2591,12 +2591,6 @@ static void write_lightcache(WriteData *wd, LightCache *cache)
 
 static void write_scene(WriteData *wd, Scene *sce, const void *id_address)
 {
-  /* Clean up, important in undo case to reduce false detection of changed datablocks. */
-  if (sce->ed) {
-    sce->ed->cache = NULL;
-    sce->ed->prefetch_job = NULL;
-  }
-
   /* write LibData */
   writestruct_at_address(wd, ID_SCE, Scene, 1, id_address, sce);
   write_iddata(wd, &sce->id);
@@ -2824,9 +2818,9 @@ static void write_scene(WriteData *wd, Scene *sce, const void *id_address)
 static void write_gpencil(WriteData *wd, bGPdata *gpd, const void *id_address)
 {
   if (gpd->id.us > 0 || wd->use_memfile) {
-    /* Clean up, important in undo case to reduce false detection of changed datablocks. */
-    /* XXX not sure why the whole runtime data is not cleared in readcode, for now mimicking it
-     * here. */
+    /* Clean up, important in undo case to reduce false detection of changed data-blocks. */
+    /* XXX not sure why the whole run-time data is not cleared in reading code,
+     * for now mimicking it here. */
     gpd->runtime.sbuffer = NULL;
     gpd->runtime.sbuffer_used = 0;
     gpd->runtime.sbuffer_size = 0;
@@ -3140,19 +3134,19 @@ static void write_windowmanager(WriteData *wd, wmWindowManager *wm, const void *
   }
 }
 
-static void write_screen(WriteData *wd, bScreen *sc, const void *id_address)
+static void write_screen(WriteData *wd, bScreen *screen, const void *id_address)
 {
   /* Screens are reference counted, only saved if used by a workspace. */
-  if (sc->id.us > 0 || wd->use_memfile) {
+  if (screen->id.us > 0 || wd->use_memfile) {
     /* write LibData */
     /* in 2.50+ files, the file identifier for screens is patched, forward compatibility */
-    writestruct_at_address(wd, ID_SCRN, bScreen, 1, id_address, sc);
-    write_iddata(wd, &sc->id);
+    writestruct_at_address(wd, ID_SCRN, bScreen, 1, id_address, screen);
+    write_iddata(wd, &screen->id);
 
-    write_previews(wd, sc->preview);
+    write_previews(wd, screen->preview);
 
     /* direct data */
-    write_area_map(wd, AREAMAP_FROM_SCREEN(sc));
+    write_area_map(wd, AREAMAP_FROM_SCREEN(screen));
   }
 }
 

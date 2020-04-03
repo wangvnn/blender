@@ -1226,7 +1226,7 @@ static bool do_lasso_select_paintface(ViewContext *vc,
 #if 0
 static void do_lasso_select_node(int mcords[][2], short moves, const eSelectOp sel_op)
 {
-  SpaceNode *snode = sa->spacedata.first;
+  SpaceNode *snode = area->spacedata.first;
 
   bNode *node;
   rcti rect;
@@ -3104,9 +3104,9 @@ static bool do_object_box_select(bContext *C, ViewContext *vc, rcti *rect, const
   qsort(vbuffer, hits, sizeof(uint[4]), opengl_bone_select_buffer_cmp);
 
   for (const uint *col = vbuffer + 3, *col_end = col + (hits * 4); col < col_end; col += 4) {
-    Bone *bone;
-    Base *base = ED_armature_base_and_bone_from_select_buffer(
-        bases, BLI_array_len(bases), *col, &bone);
+    bPoseChannel *pchan_dummy;
+    Base *base = ED_armature_base_and_pchan_from_select_buffer(
+        bases, BLI_array_len(bases), *col, &pchan_dummy);
     if (base != NULL) {
       base->object->id.tag |= LIB_TAG_DOIT;
     }

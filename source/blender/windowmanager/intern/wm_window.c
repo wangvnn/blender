@@ -854,7 +854,7 @@ wmWindow *WM_window_open_temp(bContext *C,
   wmWindow *win_prev = CTX_wm_window(C);
   wmWindow *win;
   bScreen *screen;
-  ScrArea *sa;
+  ScrArea *area;
   Scene *scene = CTX_data_scene(C);
   ViewLayer *view_layer = CTX_data_view_layer(C);
 
@@ -932,10 +932,10 @@ wmWindow *WM_window_open_temp(bContext *C,
    */
 
   /* ensure it shows the right spacetype editor */
-  sa = screen->areabase.first;
-  CTX_wm_area_set(C, sa);
+  area = screen->areabase.first;
+  CTX_wm_area_set(C, area);
 
-  ED_area_newspace(C, sa, space_type, false);
+  ED_area_newspace(C, area, space_type, false);
 
   ED_screen_change(C, screen);
   ED_screen_refresh(wm, win); /* test scale */
@@ -2458,24 +2458,3 @@ void WM_ghost_show_message_box(const char *title,
   GHOST_ShowMessageBox(g_system, title, message, help_label, continue_label, link, dialog_options);
 }
 /** \} */
-
-#ifdef WIN32
-/* -------------------------------------------------------------------- */
-/** \name Direct DirectX Context Management
- * \{ */
-
-void *WM_directx_context_create(void)
-{
-  BLI_assert(GPU_framebuffer_active_get() == NULL);
-  return GHOST_CreateDirectXContext(g_system);
-}
-
-void WM_directx_context_dispose(void *context)
-{
-  BLI_assert(GPU_framebuffer_active_get() == NULL);
-  GHOST_DisposeDirectXContext(g_system, context);
-}
-
-/** \} */
-
-#endif

@@ -507,14 +507,14 @@ static void rna_ImaPaint_canvas_update(bContext *C, PointerRNA *UNUSED(ptr))
   ViewLayer *view_layer = CTX_data_view_layer(C);
   Object *ob = OBACT(view_layer);
   Object *obedit = OBEDIT_FROM_OBACT(ob);
-  bScreen *sc;
+  bScreen *screen;
   Image *ima = scene->toolsettings->imapaint.canvas;
 
-  for (sc = bmain->screens.first; sc; sc = sc->id.next) {
-    ScrArea *sa;
-    for (sa = sc->areabase.first; sa; sa = sa->next) {
+  for (screen = bmain->screens.first; screen; screen = screen->id.next) {
+    ScrArea *area;
+    for (area = screen->areabase.first; area; area = area->next) {
       SpaceLink *slink;
-      for (slink = sa->spacedata.first; slink; slink = slink->next) {
+      for (slink = area->spacedata.first; slink; slink = slink->next) {
         if (slink->spacetype == SPACE_IMAGE) {
           SpaceImage *sima = (SpaceImage *)slink;
 
@@ -615,6 +615,14 @@ static void rna_def_paint(BlenderRNA *brna)
   RNA_def_property_boolean_sdna(prop, NULL, "flags", PAINT_FAST_NAVIGATE);
   RNA_def_property_ui_text(
       prop, "Fast Navigate", "For multires, show low resolution while navigating the view");
+  RNA_def_property_update(prop, NC_SCENE | ND_TOOLSETTINGS, NULL);
+
+  prop = RNA_def_property(srna, "use_sculpt_delay_updates", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, NULL, "flags", PAINT_SCULPT_DELAY_UPDATES);
+  RNA_def_property_ui_text(
+      prop,
+      "Delay Viewport Updates",
+      "Update the geometry when it enters the view, providing faster view navigation");
   RNA_def_property_update(prop, NC_SCENE | ND_TOOLSETTINGS, NULL);
 
   prop = RNA_def_property(srna, "input_samples", PROP_INT, PROP_UNSIGNED);

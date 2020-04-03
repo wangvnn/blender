@@ -51,8 +51,7 @@
 #include "DNA_scene_types.h"
 
 #include "BKE_action.h"
-#include "BKE_anim.h"
-#include "BKE_animsys.h"
+#include "BKE_anim_visualization.h"
 #include "BKE_armature.h"
 #include "BKE_constraint.h"
 #include "BKE_curve.h"
@@ -2523,7 +2522,7 @@ void BKE_armature_where_is(bArmature *arm)
 
 /* if bone layer is protected, copy the data from from->pose
  * when used with linked libraries this copies from the linked pose into the local pose */
-static void pose_proxy_synchronize(Object *ob, Object *from, int layer_protected)
+static void pose_proxy_sync(Object *ob, Object *from, int layer_protected)
 {
   bPose *pose = ob->pose, *frompose = from->pose;
   bPoseChannel *pchan, *pchanp;
@@ -2786,7 +2785,7 @@ void BKE_pose_rebuild(Main *bmain, Object *ob, bArmature *arm, const bool do_id_
    * using COW tag was working this morning, but not anymore... */
   if (ob->proxy != NULL && (ob->id.tag & LIB_TAG_NO_MAIN) == 0) {
     BKE_object_copy_proxy_drivers(ob, ob->proxy);
-    pose_proxy_synchronize(ob, ob->proxy, arm->layer_protected);
+    pose_proxy_sync(ob, ob->proxy, arm->layer_protected);
   }
 
   BKE_pose_update_constraint_flags(pose); /* for IK detection for example */
