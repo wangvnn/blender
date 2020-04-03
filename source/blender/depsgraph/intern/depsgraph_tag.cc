@@ -789,6 +789,11 @@ void DEG_id_type_tag(Main *bmain, short id_type)
   }
 }
 
+void DEG_id_recalc_print(struct ID *id)
+{
+  printf("%s", DEG::stringify_update_bitfield(id->recalc).c_str());
+}
+
 /* Update dependency graph when visible scenes/layers changes. */
 void DEG_graph_on_visible_update(Main *bmain, Depsgraph *depsgraph, const bool do_time)
 {

@@ -136,6 +136,8 @@ void DEG_id_type_tag(struct Main *bmain, short id_type);
 
 void DEG_ids_clear_recalc(struct Main *bmain, Depsgraph *depsgraph);
 
+void DEG_id_recalc_print(struct ID *id);
+
 /* Check if something was changed in the database and inform
  * editors about this.
  */
