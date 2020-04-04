@@ -9462,7 +9462,7 @@ static BHead *read_libblock(FileData *fd,
           oldnewmap_free_unused(fd->datamap);
           oldnewmap_clear(fd->datamap);
 
-          if (DEBUG_CHECK_ID_FOR_UNDO(id)) {
+          if (DEBUG_CHECK_ID_FOR_UNDO(id_old)) {
             printf("ID %s will have recalc flags: ", id_old->name);
             DEG_id_recalc_print(id_old);
             printf("\n\n");
