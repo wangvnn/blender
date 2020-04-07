@@ -114,22 +114,22 @@ static bool hud_panel_operator_redo_poll(const bContext *C, PanelType *UNUSED(pt
   return false;
 }
 
-static void hud_panel_operator_redo_draw_header(const bContext *C, Panel *pa)
+static void hud_panel_operator_redo_draw_header(const bContext *C, Panel *panel)
 {
   wmOperator *op = WM_operator_last_redo(C);
-  BLI_strncpy(pa->drawname, WM_operatortype_name(op->type, op->ptr), sizeof(pa->drawname));
+  BLI_strncpy(panel->drawname, WM_operatortype_name(op->type, op->ptr), sizeof(panel->drawname));
 }
 
-static void hud_panel_operator_redo_draw(const bContext *C, Panel *pa)
+static void hud_panel_operator_redo_draw(const bContext *C, Panel *panel)
 {
   wmOperator *op = WM_operator_last_redo(C);
   if (op == NULL) {
     return;
   }
   if (!WM_operator_check_ui_enabled(C, op->type->name)) {
-    uiLayoutSetEnabled(pa->layout, false);
+    uiLayoutSetEnabled(panel->layout, false);
   }
-  uiLayout *col = uiLayoutColumn(pa->layout, false);
+  uiLayout *col = uiLayoutColumn(panel->layout, false);
   uiTemplateOperatorRedoProperties(col, C);
 }
 
@@ -278,11 +278,11 @@ static ARegion *hud_region_add(ScrArea *area)
 
 void ED_area_type_hud_clear(wmWindowManager *wm, ScrArea *area_keep)
 {
-  for (wmWindow *win = wm->windows.first; win; win = win->next) {
+  LISTBASE_FOREACH (wmWindow *, win, &wm->windows) {
     bScreen *screen = WM_window_get_active_screen(win);
-    for (ScrArea *area = screen->areabase.first; area; area = area->next) {
+    LISTBASE_FOREACH (ScrArea *, area, &screen->areabase) {
       if (area != area_keep) {
-        for (ARegion *region = area->regionbase.first; region; region = region->next) {
+        LISTBASE_FOREACH (ARegion *, region, &area->regionbase) {
           if (region->regiontype == RGN_TYPE_HUD) {
             if ((region->flag & RGN_FLAG_HIDDEN) == 0) {
               hud_region_hide(region);

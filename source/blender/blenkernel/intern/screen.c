@@ -230,11 +230,11 @@ static void panel_list_copy(ListBase *newlb, const ListBase *lb)
   BLI_duplicatelist(newlb, lb);
 
   /* copy panel pointers */
-  Panel *newpa = newlb->first;
-  Panel *pa = lb->first;
-  for (; newpa; newpa = newpa->next, pa = pa->next) {
-    newpa->activedata = NULL;
-    panel_list_copy(&newpa->children, &pa->children);
+  Panel *new_panel = newlb->first;
+  Panel *panel = lb->first;
+  for (; new_panel; new_panel = new_panel->next, panel = panel->next) {
+    new_panel->activedata = NULL;
+    panel_list_copy(&new_panel->children, &panel->children);
   }
 }
 
@@ -418,13 +418,13 @@ void BKE_region_callback_free_gizmomap_set(void (*callback)(struct wmGizmoMap *)
 
 void BKE_area_region_panels_free(ListBase *lb)
 {
-  Panel *pa, *pa_next;
-  for (pa = lb->first; pa; pa = pa_next) {
-    pa_next = pa->next;
-    if (pa->activedata) {
-      MEM_freeN(pa->activedata);
+  Panel *panel, *panel_next;
+  for (panel = lb->first; panel; panel = panel_next) {
+    panel_next = panel->next;
+    if (panel->activedata) {
+      MEM_freeN(panel->activedata);
     }
-    BKE_area_region_panels_free(&pa->children);
+    BKE_area_region_panels_free(&panel->children);
   }
 
   BLI_freelistN(lb);
@@ -724,7 +724,7 @@ void BKE_screen_remove_unused_scrverts(bScreen *screen)
 ARegion *BKE_area_find_region_type(const ScrArea *area, int region_type)
 {
   if (area) {
-    for (ARegion *region = area->regionbase.first; region; region = region->next) {
+    LISTBASE_FOREACH (ARegion *, region, &area->regionbase) {
       if (region->regiontype == region_type) {
         return region;
       }
@@ -771,7 +771,7 @@ ARegion *BKE_area_find_region_xy(ScrArea *area, const int regiontype, int x, int
 ARegion *BKE_screen_find_region_xy(bScreen *screen, const int regiontype, int x, int y)
 {
   ARegion *region_found = NULL;
-  for (ARegion *region = screen->regionbase.first; region; region = region->next) {
+  LISTBASE_FOREACH (ARegion *, region, &screen->regionbase) {
     if ((regiontype == RGN_TYPE_ANY) || (region->regiontype == regiontype)) {
       if (BLI_rcti_isect_pt(&region->winrct, x, y)) {
         region_found = region;
@@ -828,7 +828,7 @@ ScrArea *BKE_screen_area_map_find_area_xy(const ScrAreaMap *areamap,
                                           int x,
                                           int y)
 {
-  for (ScrArea *area = areamap->areabase.first; area; area = area->next) {
+  LISTBASE_FOREACH (ScrArea *, area, &areamap->areabase) {
     if (BLI_rcti_isect_pt(&area->totrct, x, y)) {
       if ((spacetype == SPACE_TYPE_ANY) || (area->spacetype == spacetype)) {
         return area;
@@ -915,8 +915,8 @@ bool BKE_screen_is_used(const bScreen *screen)
 void BKE_screen_header_alignment_reset(bScreen *screen)
 {
   int alignment = (U.uiflag & USER_HEADER_BOTTOM) ? RGN_ALIGN_BOTTOM : RGN_ALIGN_TOP;
-  for (ScrArea *area = screen->areabase.first; area; area = area->next) {
-    for (ARegion *region = area->regionbase.first; region; region = region->next) {
+  LISTBASE_FOREACH (ScrArea *, area, &screen->areabase) {
+    LISTBASE_FOREACH (ARegion *, region, &area->regionbase) {
       if (ELEM(region->regiontype, RGN_TYPE_HEADER, RGN_TYPE_TOOL_HEADER)) {
         if (ELEM(area->spacetype, SPACE_FILE, SPACE_USERPREF, SPACE_OUTLINER, SPACE_PROPERTIES)) {
           region->alignment = RGN_ALIGN_TOP;

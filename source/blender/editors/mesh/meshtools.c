@@ -161,7 +161,7 @@ static void join_mesh_single(Depsgraph *depsgraph,
        */
       if (key) {
         /* if this mesh has any shapekeys, check first, otherwise just copy coordinates */
-        for (KeyBlock *kb = key->block.first; kb; kb = kb->next) {
+        LISTBASE_FOREACH (KeyBlock *, kb, &key->block) {
           /* get pointer to where to write data for this mesh in shapekey's data array */
           float(*cos)[3] = ((float(*)[3])kb->data) + *vertofs;
 
@@ -191,7 +191,7 @@ static void join_mesh_single(Depsgraph *depsgraph,
        * - otherwise, copy across plain coordinates (no need to transform coordinates)
        */
       if (key) {
-        for (KeyBlock *kb = key->block.first; kb; kb = kb->next) {
+        LISTBASE_FOREACH (KeyBlock *, kb, &key->block) {
           /* get pointer to where to write data for this mesh in shapekey's data array */
           float(*cos)[3] = ((float(*)[3])kb->data) + *vertofs;
 
@@ -440,7 +440,7 @@ int join_mesh_exec(bContext *C, wmOperator *op)
       }
 
       /* Join this object's face maps to the base one's. */
-      for (bFaceMap *fmap = ob_iter->fmaps.first; fmap; fmap = fmap->next) {
+      LISTBASE_FOREACH (bFaceMap *, fmap, &ob_iter->fmaps) {
         /* See if this group exists in the object (if it doesn't, add it to the end) */
         if (BKE_object_facemap_find_name(ob, fmap->name) == NULL) {
           bFaceMap *fmap_new = MEM_mallocN(sizeof(bFaceMap), "join faceMap");
@@ -849,10 +849,10 @@ static int ed_mesh_mirror_topo_table_update(Object *ob, Mesh *me_eval)
 
 /** \} */
 
-static int mesh_get_x_mirror_vert_spatial(Object *ob, Mesh *mesh, int index)
+static int mesh_get_x_mirror_vert_spatial(Object *ob, Mesh *me_eval, int index)
 {
   Mesh *me = ob->data;
-  MVert *mvert = mesh ? mesh->mvert : me->mvert;
+  MVert *mvert = me_eval ? me_eval->mvert : me->mvert;
   float vec[3];
 
   mvert = &mvert[index];
@@ -860,7 +860,7 @@ static int mesh_get_x_mirror_vert_spatial(Object *ob, Mesh *mesh, int index)
   vec[1] = mvert->co[1];
   vec[2] = mvert->co[2];
 
-  return ED_mesh_mirror_spatial_table_lookup(ob, NULL, mesh, vec);
+  return ED_mesh_mirror_spatial_table_lookup(ob, NULL, me_eval, vec);
 }
 
 static int mesh_get_x_mirror_vert_topo(Object *ob, Mesh *mesh, int index)

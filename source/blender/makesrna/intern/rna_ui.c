@@ -27,6 +27,8 @@
 
 #include "BKE_idprop.h"
 
+#include "BLI_listbase.h"
+
 #include "RNA_define.h"
 
 #include "RNA_enum_types.h"
@@ -126,7 +128,7 @@ static bool panel_poll(const bContext *C, PanelType *pt)
   return visible;
 }
 
-static void panel_draw(const bContext *C, Panel *pnl)
+static void panel_draw(const bContext *C, Panel *panel)
 {
   extern FunctionRNA rna_Panel_draw_func;
 
@@ -134,17 +136,17 @@ static void panel_draw(const bContext *C, Panel *pnl)
   ParameterList list;
   FunctionRNA *func;
 
-  RNA_pointer_create(&CTX_wm_screen(C)->id, pnl->type->rna_ext.srna, pnl, &ptr);
+  RNA_pointer_create(&CTX_wm_screen(C)->id, panel->type->rna_ext.srna, panel, &ptr);
   func = &rna_Panel_draw_func; /* RNA_struct_find_function(&ptr, "draw"); */
 
   RNA_parameter_list_create(&list, &ptr, func);
   RNA_parameter_set_lookup(&list, "context", &C);
-  pnl->type->rna_ext.call((bContext *)C, &ptr, func, &list);
+  panel->type->rna_ext.call((bContext *)C, &ptr, func, &list);
 
   RNA_parameter_list_free(&list);
 }
 
-static void panel_draw_header(const bContext *C, Panel *pnl)
+static void panel_draw_header(const bContext *C, Panel *panel)
 {
   extern FunctionRNA rna_Panel_draw_header_func;
 
@@ -152,17 +154,17 @@ static void panel_draw_header(const bContext *C, Panel *pnl)
   ParameterList list;
   FunctionRNA *func;
 
-  RNA_pointer_create(&CTX_wm_screen(C)->id, pnl->type->rna_ext.srna, pnl, &ptr);
+  RNA_pointer_create(&CTX_wm_screen(C)->id, panel->type->rna_ext.srna, panel, &ptr);
   func = &rna_Panel_draw_header_func; /* RNA_struct_find_function(&ptr, "draw_header"); */
 
   RNA_parameter_list_create(&list, &ptr, func);
   RNA_parameter_set_lookup(&list, "context", &C);
-  pnl->type->rna_ext.call((bContext *)C, &ptr, func, &list);
+  panel->type->rna_ext.call((bContext *)C, &ptr, func, &list);
 
   RNA_parameter_list_free(&list);
 }
 
-static void panel_draw_header_preset(const bContext *C, Panel *pnl)
+static void panel_draw_header_preset(const bContext *C, Panel *panel)
 {
   extern FunctionRNA rna_Panel_draw_header_preset_func;
 
@@ -170,12 +172,12 @@ static void panel_draw_header_preset(const bContext *C, Panel *pnl)
   ParameterList list;
   FunctionRNA *func;
 
-  RNA_pointer_create(&CTX_wm_screen(C)->id, pnl->type->rna_ext.srna, pnl, &ptr);
+  RNA_pointer_create(&CTX_wm_screen(C)->id, panel->type->rna_ext.srna, panel, &ptr);
   func = &rna_Panel_draw_header_preset_func;
 
   RNA_parameter_list_create(&list, &ptr, func);
   RNA_parameter_set_lookup(&list, "context", &C);
-  pnl->type->rna_ext.call((bContext *)C, &ptr, func, &list);
+  panel->type->rna_ext.call((bContext *)C, &ptr, func, &list);
 
   RNA_parameter_list_free(&list);
 }
@@ -202,7 +204,7 @@ static void rna_Panel_unregister(Main *bmain, StructRNA *type)
 
   WM_paneltype_remove(pt);
 
-  for (LinkData *link = pt->children.first; link; link = link->next) {
+  LISTBASE_FOREACH (LinkData *, link, &pt->children) {
     PanelType *child_pt = link->data;
     child_pt->parent = NULL;
   }
@@ -212,16 +214,16 @@ static void rna_Panel_unregister(Main *bmain, StructRNA *type)
   BLI_freelinkN(&art->paneltypes, pt);
 
   for (bScreen *screen = bmain->screens.first; screen; screen = screen->id.next) {
-    for (ScrArea *area = screen->areabase.first; area; area = area->next) {
-      for (SpaceLink *sl = area->spacedata.first; sl; sl = sl->next) {
+    LISTBASE_FOREACH (ScrArea *, area, &screen->areabase) {
+      LISTBASE_FOREACH (SpaceLink *, sl, &area->spacedata) {
         if (sl->spacetype == space_type) {
           ListBase *regionbase = (sl == area->spacedata.first) ? &area->regionbase :
                                                                  &sl->regionbase;
-          for (ARegion *region = regionbase->first; region; region = region->next) {
+          LISTBASE_FOREACH (ARegion *, region, regionbase) {
             if (region->type == art) {
-              for (Panel *pa = region->panels.first; pa; pa = pa->next) {
-                if (pa->type == pt) {
-                  pa->type = NULL;
+              LISTBASE_FOREACH (Panel *, panel, &region->panels) {
+                if (panel->type == pt) {
+                  panel->type = NULL;
                 }
               }
             }
