@@ -500,6 +500,8 @@ bool BLI_task_pool_canceled(TaskPool *pool)
     case TASK_POOL_BACKGROUND_SERIAL:
       return background_task_pool_canceled(pool);
   }
+  /* Some compilers don't see that the switch statement handles all possible cases. */
+  return true;
 }
 
 void *BLI_task_pool_userdata(TaskPool *pool)
