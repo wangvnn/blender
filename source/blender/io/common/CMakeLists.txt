@@ -24,8 +24,6 @@ set(INC
   ../../blenlib
   ../../depsgraph
   ../../makesdna
-  ../../makesrna
-  ../../../../intern/guardedalloc
 )
 
 set(INC_SYS
