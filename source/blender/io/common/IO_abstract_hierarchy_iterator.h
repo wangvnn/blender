@@ -48,7 +48,7 @@ struct Object;
 struct ParticleSystem;
 struct ViewLayer;
 
-namespace USD {
+namespace IO {
 
 class AbstractHierarchyWriter;
 
@@ -258,6 +258,6 @@ class AbstractHierarchyIterator {
   virtual void delete_object_writer(AbstractHierarchyWriter *writer) = 0;
 };
 
-}  // namespace USD
+}  // namespace IO
 
 #endif /* __ABSTRACT_HIERARCHY_ITERATOR_H__ */

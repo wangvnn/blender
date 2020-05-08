@@ -16,7 +16,7 @@
  * The Original Code is Copyright (C) 2019 Blender Foundation.
  * All rights reserved.
  */
-#include "abstract_hierarchy_iterator.h"
+#include "IO_abstract_hierarchy_iterator.h"
 
 #include <iostream>
 #include <limits.h>
@@ -43,7 +43,7 @@ extern "C" {
 #include "DEG_depsgraph_query.h"
 }
 
-namespace USD {
+namespace IO {
 
 const HierarchyContext *HierarchyContext::root()
 {
@@ -651,4 +651,4 @@ bool AbstractHierarchyIterator::should_visit_dupli_object(const DupliObject *dup
   return !dupli_object->no_draw;
 }
 
-}  // namespace USD
+}  // namespace IO

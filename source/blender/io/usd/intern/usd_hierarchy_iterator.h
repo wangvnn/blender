@@ -19,7 +19,7 @@
 #ifndef __USD_HIERARCHY_ITERATOR_H__
 #define __USD_HIERARCHY_ITERATOR_H__
 
-#include "abstract_hierarchy_iterator.h"
+#include "IO_abstract_hierarchy_iterator.h"
 #include "usd.h"
 #include "usd_exporter_context.h"
 
@@ -33,6 +33,10 @@ struct ID;
 struct Object;
 
 namespace USD {
+
+using IO::AbstractHierarchyIterator;
+using IO::AbstractHierarchyWriter;
+using IO::HierarchyContext;
 
 class USDHierarchyIterator : public AbstractHierarchyIterator {
  private:
