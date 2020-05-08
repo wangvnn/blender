@@ -252,10 +252,10 @@ class CurveExportTest(AbstractAlembicTest):
         self.run_blender('single-curve.blend', script)
 
         # Now check the resulting Alembic file.
-        abcprop = self.abcprop(abc, '/NurbsCurve/NurbsCurveShape/.geom')
+        abcprop = self.abcprop(abc, '/NurbsCurve/CurveData/.geom')
         self.assertEqual(abcprop['.orders'], [4])
 
-        abcprop = self.abcprop(abc, '/NurbsCurve/NurbsCurveShape/.geom/.userProperties')
+        abcprop = self.abcprop(abc, '/NurbsCurve/CurveData/.geom/.userProperties')
         self.assertEqual(abcprop['blender:resolution'], 10)
 
 
@@ -285,7 +285,7 @@ class HairParticlesExportTest(AbstractAlembicTest):
         abcprop = self.abcprop(abc, '/Suzanne/Non-hair particle system/.geom')
         self.assertIn('.velocities', abcprop)
 
-        abcprop = self.abcprop(abc, '/Suzanne/SuzanneShape/.geom')
+        abcprop = self.abcprop(abc, '/Suzanne/MonkeyMesh/.geom')
         self.assertIn('.faceIndices', abcprop)
 
     @with_tempdir
@@ -298,7 +298,7 @@ class HairParticlesExportTest(AbstractAlembicTest):
         self.assertRaises(AbcPropError, self.abcprop, abc,
                           '/Suzanne/Non-hair particle system/.geom')
 
-        abcprop = self.abcprop(abc, '/Suzanne/SuzanneShape/.geom')
+        abcprop = self.abcprop(abc, '/Suzanne/MonkeyMesh/.geom')
         self.assertIn('.faceIndices', abcprop)
 
     @with_tempdir
@@ -310,7 +310,7 @@ class HairParticlesExportTest(AbstractAlembicTest):
         abcprop = self.abcprop(abc, '/Suzanne/Non-hair particle system/.geom')
         self.assertIn('.velocities', abcprop)
 
-        abcprop = self.abcprop(abc, '/Suzanne/SuzanneShape/.geom')
+        abcprop = self.abcprop(abc, '/Suzanne/MonkeyMesh/.geom')
         self.assertIn('.faceIndices', abcprop)
 
     @with_tempdir
@@ -321,7 +321,7 @@ class HairParticlesExportTest(AbstractAlembicTest):
         self.assertRaises(AbcPropError, self.abcprop, abc,
                           '/Suzanne/Non-hair particle system/.geom')
 
-        abcprop = self.abcprop(abc, '/Suzanne/SuzanneShape/.geom')
+        abcprop = self.abcprop(abc, '/Suzanne/MonkeyMesh/.geom')
         self.assertIn('.faceIndices', abcprop)
 
 
@@ -410,7 +410,7 @@ class LongNamesExportTest(AbstractAlembicTest):
             0.0, 3.0, 0.0, 1.0,
         ])
 
-        abcprop = self.abcprop(abc, '%s/CubeShape/.geom' % name)
+        abcprop = self.abcprop(abc, '%s/Cube/.geom' % name)
         self.assertIn('.faceCounts', abcprop)
 
 
