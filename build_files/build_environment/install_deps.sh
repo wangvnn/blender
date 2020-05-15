@@ -2403,7 +2403,8 @@ compile_OpenCOLLADA() {
     cmake_d="$cmake_d -D USE_LIBXML=ON"
     # XXX Does not work!
 #    cmake_d="$cmake_d -D USE_STATIC=OFF"
-    cmake_d="$cmake_d -D USE_STATIC=ON"
+    # turn on fPIC for collada static build
+    cmake_d="$cmake_d -D CMAKE_CXX_FLAGS="fPIC" -D USE_STATIC=ON"
 
     cmake $cmake_d ../
 
